@@ -173,7 +173,7 @@ const local = '* * * * *'; // ⏰ time interval to check posts (no time) & local
 const localtime = '*/6 * * * *'; // ⏰ time interval to check posts (every 6 min)
 const discloud = '*/6 * * * *'; // ⏰ time interval to check posts (every 6 min)
 
-const job = new CronJob(local, main);
+const job = new CronJob(localtime, main);
 
 job.start();
 
