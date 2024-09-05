@@ -4,7 +4,7 @@
   <img src="https://i.imgur.com/8HGAasG.png" width="500">
 </a>
   <br>
-<a href="https://bolhatech.pages.dev" >
+<a href="https://bsky.app/profile/bolhatech.pages.dev" >
   <img src="https://i.imgur.com/2B01blo.png" width="500">
 </a>
 <br> <br> 
