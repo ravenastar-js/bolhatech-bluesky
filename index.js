@@ -118,6 +118,12 @@ async function checkIfReposted(target, token) {
     }
 }
 
+// ⏰ delay
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
 async function main() {
     try {
         if (!process.env.BLUESKY_USERNAME || !process.env.BLUESKY_PASSWORD) {
@@ -155,6 +161,7 @@ async function main() {
         // 🔄 Repost all unreposted posts
         for (const post of unrepostedPosts) {
             await repost(post, token, did);
+            await delay(1000); // delay 1 seg
         }
     } catch (error) {
         console.error('Error:', error);
