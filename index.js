@@ -89,7 +89,7 @@ async function repost(target, token, did) {
             }
         });
 
-        console.log(`Reposted: ${target.cid}`);
+        console.log(`🔄 Reposted: ${target.cid}`);
         return { message: 'Reposted successfully', data };
     } catch (error) {
         console.error('Error reposting:', error);
@@ -154,7 +154,7 @@ async function main() {
         }
 
         if (unrepostedPosts.length === 0) {
-            console.log('No new posts to repost');
+            console.log('⋆.˚🦋༘⋆');
             return;
         }
 
