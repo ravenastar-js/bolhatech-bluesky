@@ -134,7 +134,7 @@ async function main() {
         await agent.login({ identifier: process.env.BLUESKY_USERNAME, password: process.env.BLUESKY_PASSWORD });
 
         const startTime = new Date().toLocaleTimeString();
-        console.log(`Tick executed ${startTime}`);
+        console.log(`⏰ Tick executed ${startTime}`);
 
         const { token, did } = await getAccessToken();
 
