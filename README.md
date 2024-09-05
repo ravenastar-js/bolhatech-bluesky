@@ -18,8 +18,8 @@
 🔍 always the last 100 posts<br>
 🔍 sempre as últimas 100 postagens
 
-⏰ Intervalo de tempo para verificar as postagens (a cada 6 min)<br>
-⏰ time interval to check posts (every 6 min)
+⏰ Intervalo de tempo para verificar as postagens (a cada 8 min)<br>
+⏰ time interval to check posts (every 8 min)
 
 # ▼ HOST ▼
 <a href="https://discloud.com">
