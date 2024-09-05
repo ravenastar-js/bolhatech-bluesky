@@ -171,9 +171,9 @@ async function main() {
 // ⏰ Run this on a cron job
 const local = '* * * * *'; // ⏰ time interval to check posts (no time) & local test
 const localtime = '*/6 * * * *'; // ⏰ time interval to check posts (every 6 min)
-const discloud = '*/6 * * * *'; // ⏰ time interval to check posts (every 6 min)
+const discloud = '*/8 * * * *'; // ⏰ time interval to check posts (every 8 min)
 
-const job = new CronJob(localtime, main);
+const job = new CronJob(discloud, main);
 
 job.start();
 
