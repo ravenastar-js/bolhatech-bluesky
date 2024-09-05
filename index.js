@@ -161,7 +161,7 @@ async function main() {
         // 🔄 Repost all unreposted posts
         for (const post of unrepostedPosts) {
             await repost(post, token, did);
-            await delay(1000); // delay 1 seg
+            await delay(2000); // delay 2 seg
         }
     } catch (error) {
         console.error('Error:', error);
