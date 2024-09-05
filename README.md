@@ -9,7 +9,7 @@
 </a>
 <br> <br> 
 
-➤ [#bolhatech](https://bsky.app/hashtag/bolhatech) or [@bolhatech.pages.dev](https://bolhatech.pages.dev)<br>
+➤ `bolhatech` in ALT text img, [hashtag](https://bsky.app/hashtag/bolhatech) or [@bolhatech.pages.dev](https://bolhatech.pages.dev)<br>
 (BETA) by [RavenaStar](https://bsky.app/profile/ravenastar.pages.dev)
  
  inspired by [@samsantosb.bsky.social](https://bsky.app/profile/samsantosb.bsky.social)
