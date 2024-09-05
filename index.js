@@ -163,8 +163,9 @@ async function main() {
             await repost(post, token, did);
             await delay(2000); // delay 2 seg
         }
-    } catch (error) {
-        console.error('Error:', error);
+    } catch (err) {
+        if (err.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset ] 🔗 https://hammertime.cyou/pt-BR?t=${err.headers['ratelimit-reset']}`)
+        else console.error('Error:', err);
     }
 }
 
