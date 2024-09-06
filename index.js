@@ -164,7 +164,7 @@ async function main() {
             await delay(2000); // delay 2 seg
         }
     } catch (err) {
-        if (err.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset ] 🔗 https://hammertime.cyou/pt-BR?t=${err.headers['ratelimit-reset']}`)
+        if (err.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset ] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`)
         else console.error('Error:', err);
     }
 }
