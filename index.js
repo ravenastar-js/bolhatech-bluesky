@@ -6,7 +6,16 @@ const axios = require('axios');
 dotenv.config();
 
 const API_URL = 'https://bsky.social/xrpc';
-const TG = process.env.TAG
+const TG = process.env.TAG;
+
+const MAX_REQUESTS_PER_HOUR = 1666; // Limit of 1,666 records per hour
+const MAX_REQUESTS_PER_EXECUTION = 300; // Limit of 300 requests per CronJob execution
+const cronMinutes = 8;
+
+let actionPoints = 0; // Action Point Counter
+const MAX_POINTS_PER_HOUR = 5000; // Points limit per hour
+
+let lastHourReset = Date.now();
 
 // 🌐 Create a Bluesky Agent
 const agent = new AtpAgent({
@@ -80,6 +89,12 @@ async function repost(target, token, did) {
             return;
         }
 
+        // 🔍 Check if the points limit has been reached
+        if (actionPoints + 3 > MAX_POINTS_PER_HOUR) {
+            console.log('⚠️ Points per hour limit reached. Waiting...');
+            return;
+        }
+
         // 🔄 Create repost data and send repost request
         const repostData = createRepostData(target, did);
 
@@ -89,6 +104,7 @@ async function repost(target, token, did) {
             }
         });
 
+        actionPoints += 3; // ➕ Increment action points for CREATE
         console.log(`🔄 Reposted: ${target.cid}`);
         return { message: 'Reposted successfully', data };
     } catch (error) {
@@ -123,13 +139,20 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-
 async function main() {
     try {
         if (!process.env.BLUESKY_USERNAME || !process.env.BLUESKY_PASSWORD) {
             throw new Error('Missing BLUESKY_USERNAME or BLUESKY_PASSWORD in environment variables');
         }
 
+        // 🔄 Resetting Point Counters
+        const now = Date.now();
+        if (now - lastHourReset >= 3600000) { // ⏰ 1 hora em milissegundos
+            actionPoints = 0;
+            lastHourReset = now;
+            console.log('🔄 Points reset to new time');
+        }
+        
         // 🔐 Log in to Bluesky and get access token
         await agent.login({ identifier: process.env.BLUESKY_USERNAME, password: process.env.BLUESKY_PASSWORD });
 
@@ -145,7 +168,7 @@ async function main() {
         const allPosts = [...mentions, ...tags];
         const unrepostedPosts = [];
 
-        // 🔄 Check each post if it has been reposted
+        // 🔍 Check each post if it has been reposted
         for (const post of allPosts) {
             const isReposted = await checkIfReposted(post, token);
             if (!isReposted) {
@@ -158,10 +181,13 @@ async function main() {
             return;
         }
 
+        const maxRepostsPerExecution = Math.min(MAX_REQUESTS_PER_EXECUTION, Math.floor(MAX_REQUESTS_PER_HOUR / (60 / cronMinutes)));
+        const delayTime = Math.max((cronMinutes * 60 * 1000) / maxRepostsPerExecution, 1000);
+
         // 🔄 Repost all unreposted posts
         for (const post of unrepostedPosts) {
             await repost(post, token, did);
-            await delay(2500); // delay 2,5 seg
+            await delay(delayTime); // ⏰ delay time
         }
     } catch (err) {
         if (err.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset ] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`)
@@ -169,12 +195,9 @@ async function main() {
     }
 }
 
-// ⏰ Run this on a cron job
-const local = '* * * * *'; // ⏰ time interval to check posts (no time) & local test
-const localtime = '*/6 * * * *'; // ⏰ time interval to check posts (every 6 min)
-const discloud = '*/8 * * * *'; // ⏰ time interval to check posts (every 8 min)
-
-const job = new CronJob(discloud, main);
+// ⏰ Run CronJob time interval
+const cjt = `*/${cronMinutes} * * * *`; // ⏰ time interval in minutes
+const job = new CronJob(cjt , main);
 
 job.start();
 
@@ -185,6 +208,6 @@ console.log(`
 ███████╗  ██║  █████████████╔╝  ██║  █████╗ ██║  ██║
 ╚════██║  ██║  ██╔══████╔══██╗  ██║  ██╔══╝ ██║  ██║
 ███████║  ██║  ██║  ████║  ██║  ██║  █████████████╔╝
-╚══════╝  ╚═╝  ╚═╝  ╚═╚═╝  ╚═╝  ╚═╝  ╚══════╚═════╝ 
+╚══════╝  ╚═╝  ╚═╚═╝  ╚═╝  ╚═╝  ╚══════╚═════╝ 
 🟢 by bolhatech.pages.dev                                                                           
 `);
