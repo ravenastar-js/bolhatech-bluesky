@@ -21,9 +21,6 @@
 ⏰ Intervalo de tempo para verificar as postagens (a cada 8 min)<br>
 ⏰ time interval to check posts (every 8 min)
 
-🔄 192 reposts em 8 minutos (480 segundos / 2.5 segundos por repost)<br>
-🔄 192 reposts in 8 minutes (480 seconds / 2.5 seconds per repost)
-
 # ▼ HOST ▼
 <a href="https://discloud.com">
   <img src="https://i.imgur.com/4DhswV6.png" width="600">
