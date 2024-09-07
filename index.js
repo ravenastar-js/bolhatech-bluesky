@@ -161,7 +161,7 @@ async function main() {
         // 🔄 Repost all unreposted posts
         for (const post of unrepostedPosts) {
             await repost(post, token, did);
-            await delay(2000); // delay 2 seg
+            await delay(2500); // delay 2,5 seg
         }
     } catch (err) {
         if (err.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset ] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`)
