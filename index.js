@@ -95,7 +95,7 @@ async function repost(target, token, did) {
             return;
         }
 
-        // 🔄 Create repost data and send repost request
+        // 📝 Create repost data and send repost request
         const repostData = createRepostData(target, did);
 
         const { data } = await axios.post(`${API_URL}/com.atproto.repo.createRecord`, repostData, {
@@ -105,7 +105,7 @@ async function repost(target, token, did) {
         });
 
         actionPoints += 3; // ➕ Increment action points for CREATE
-        console.log(`🔄 Reposted: ${target.cid}`);
+        console.log(`🔄📨 Reposted: ${target.cid}`);
         return { message: 'Reposted successfully', data };
     } catch (error) {
         console.error('Error reposting:', error);
