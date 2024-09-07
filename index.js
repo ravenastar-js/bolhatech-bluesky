@@ -105,7 +105,11 @@ async function repost(target, token, did) {
         });
 
         actionPoints += 3; // ➕ Increment action points for CREATE
-        console.log(`🔄📨 Reposted: ${target.cid}`);
+      
+        const t_uri = target.uri;
+        const post_id = t_uri.split('/').pop();
+        console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 https://bsky.app/profile/${target.author.handle}/post/${post_id}\n`);
+
         return { message: 'Reposted successfully', data };
     } catch (error) {
         console.error('Error reposting:', error);
