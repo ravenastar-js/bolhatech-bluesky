@@ -151,7 +151,7 @@ async function main() {
 
         // 🔄 Resetting Point Counters
         const now = Date.now();
-        if (now - lastHourReset >= 3600000) { // ⏰ 1 hora em milissegundos
+        if (now - lastHourReset >= 3600000) { // ⏰ 1 hour in milliseconds
             actionPoints = 0;
             lastHourReset = now;
             console.log('🔄 Points reset to new time');
