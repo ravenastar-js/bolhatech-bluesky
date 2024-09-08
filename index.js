@@ -1,7 +1,7 @@
 const dotenv = require('dotenv');
 const { CronJob } = require('cron');
 const axios = require('axios');
-const { WebhookClient } = require('discord.js');
+const { WebhookClient, EmbedBuilder } = require('discord.js');
 
 dotenv.config();
 
@@ -109,10 +109,25 @@ async function repost(target, token, did) {
         const t_uri = target.uri;
         const post_id = t_uri.split('/').pop();
         const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
+
+        let rtext = target.record?.text || "";
+        let desc_embed = rtext.length === 0 ? "" : rtext;
+        
+        const WH_Embed = new EmbedBuilder()
+            .setColor("#4ec773")
+            .setAuthor({ 
+                name: `${target.author.handle}`, 
+                iconURL: `${target.author.avatar}`, 
+                url: `https://bsky.app/profile/${target.author.handle}/` 
+            })
+            .setDescription(`${desc_embed}\n-# <:rbluesky:1282450204947251263> ${link}`)
+            .setImage('https://i.imgur.com/2B01blo.png')
+            .setTimestamp();
+        
         webhookClient.send({
-            content: link,
             username: 'bolhatech.pages.dev',
             avatarURL: 'https://i.imgur.com/0q9F06h.png',
+            embeds: [WH_Embed]
         });
 
         console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
