@@ -118,7 +118,7 @@ async function repost(target, token, did) {
             .setAuthor({ 
                 name: `${target.author.handle}`, 
                 iconURL: `${target.author.avatar}`, 
-                url: `https://bsky.app/profile/${target.author.handle}/` 
+                url: `https://bsky.app/profile/${target.author.handle}` 
             })
             .setDescription(`${desc_embed}\n-# <:rbluesky:1282450204947251263> ${link}`)
             .setImage('https://i.imgur.com/2B01blo.png')
