@@ -1,4 +1,3 @@
-const { AtpAgent } = require('@atproto/api');
 const dotenv = require('dotenv');
 const { CronJob } = require('cron');
 const axios = require('axios');
@@ -17,11 +16,6 @@ const MAX_POINTS_PER_HOUR = 5000; // Points limit per hour
 
 let lastHourReset = Date.now();
 
-// 🌐 Create a Bluesky Agent
-const agent = new AtpAgent({
-    service: 'https://bsky.social',
-});
-
 async function getAccessToken() {
     try {
         // 🔑 Request an access token using Bluesky credentials
@@ -30,9 +24,13 @@ async function getAccessToken() {
             password: process.env.BLUESKY_PASSWORD
         });
         return { token: data.accessJwt, did: data.did };
-    } catch (error) {
-        console.error('Error getting access token:', error);
-        throw error;
+    } catch (err) {
+        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") {
+            console.log(`[ 🔴 ratelimit-reset in getAccessToken ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
+            return { error: "RateLimitExceeded"};
+        }
+        console.error('Error getting access token:', err.message || err);
+        throw err;
     }
 }
 
@@ -45,9 +43,9 @@ async function getMentions(token) {
             }
         });
         return { mentions: data.notifications.filter(({ reason }) => reason === 'mention') };
-    } catch (error) {
-        console.error('Error getting mentions:', error);
-        throw error;
+    } catch (err) {
+        console.error('Error getting mentions:', err);
+        throw err;
     }
 }
 
@@ -65,9 +63,9 @@ async function getTags(token) {
         };
         const { data } = await axios(configTag);
         return { tags: data.posts.filter(({ indexedAt }) => indexedAt).sort((a, b) => a.typeid - b.typeid) };
-    } catch (error) {
-        console.error('Error getting tags:', error);
-        throw error;
+    } catch (err) {
+        console.error('Error getting tags:', err);
+        throw err;
     }
 }
 
@@ -105,11 +103,11 @@ async function repost(target, token, did) {
         });
 
         actionPoints += 3; // ➕ Increment action points for CREATE
-      
+
         const t_uri = target.uri;
         const post_id = t_uri.split('/').pop();
         console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 https://bsky.app/profile/${target.author.handle}/post/${post_id}\n`);
-
+        
         return { message: 'Reposted successfully', data };
     } catch (error) {
         console.error('Error reposting:', error);
@@ -156,15 +154,13 @@ async function main() {
             lastHourReset = now;
             console.log('🔄 Points reset to new time');
         }
-        
-        // 🔐 Log in to Bluesky and get access token
-        await agent.login({ identifier: process.env.BLUESKY_USERNAME, password: process.env.BLUESKY_PASSWORD });
 
         const startTime = new Date().toLocaleTimeString();
         console.log(`⏰ Tick executed ${startTime}`);
 
-        const { token, did } = await getAccessToken();
-
+        const { token, did, error } = await getAccessToken();
+        if (error === "RateLimitExceeded") return;
+        
         // 📥 Fetch mentions and tags
         const { mentions } = await getMentions(token);
         const { tags } = await getTags(token);
@@ -196,12 +192,13 @@ async function main() {
     } catch (err) {
         if (err.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset ] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`)
         else console.error('Error:', err);
+        throw err;
     }
 }
 
 // ⏰ Run CronJob time interval
 const cjt = `*/${cronMinutes} * * * *`; // ⏰ time interval in minutes
-const job = new CronJob(cjt , main);
+const job = new CronJob(cjt, main);
 
 job.start();
 
