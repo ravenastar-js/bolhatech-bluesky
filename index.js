@@ -1,6 +1,8 @@
 const dotenv = require('dotenv');
 const { CronJob } = require('cron');
 const axios = require('axios');
+const { WebhookClient } = require('discord.js');
+const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
 
 dotenv.config();
 
@@ -27,7 +29,7 @@ async function getAccessToken() {
     } catch (err) {
         if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") {
             console.log(`[ 🔴 ratelimit-reset in getAccessToken ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
-            return { error: "RateLimitExceeded"};
+            return { error: "RateLimitExceeded" };
         }
         console.error('Error getting access token:', err.message || err);
         throw err;
@@ -106,8 +108,15 @@ async function repost(target, token, did) {
 
         const t_uri = target.uri;
         const post_id = t_uri.split('/').pop();
-        console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 https://bsky.app/profile/${target.author.handle}/post/${post_id}\n`);
-        
+        const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
+        webhookClient.send({
+            content: link,
+            username: 'bolhatech.pages.dev',
+            avatarURL: 'https://i.imgur.com/0q9F06h.png',
+        });
+
+        console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
+
         return { message: 'Reposted successfully', data };
     } catch (error) {
         console.error('Error reposting:', error);
@@ -160,7 +169,7 @@ async function main() {
 
         const { token, did, error } = await getAccessToken();
         if (error === "RateLimitExceeded") return;
-        
+
         // 📥 Fetch mentions and tags
         const { mentions } = await getMentions(token);
         const { tags } = await getTags(token);
