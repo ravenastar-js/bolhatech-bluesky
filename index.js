@@ -2,10 +2,10 @@ const dotenv = require('dotenv');
 const { CronJob } = require('cron');
 const axios = require('axios');
 const { WebhookClient } = require('discord.js');
-const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
 
 dotenv.config();
 
+const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
 const API_URL = 'https://bsky.social/xrpc';
 const TG = process.env.TAG;
 
