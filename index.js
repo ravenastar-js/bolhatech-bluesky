@@ -112,6 +112,9 @@ async function repost(target, token, did) {
 
         let rtext = target.record?.text || "";
         let desc_embed = rtext.length === 0 ? "" : rtext;
+
+        const isoDate = target.record.createdAt
+        const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
         
         const WH_Embed = new EmbedBuilder()
             .setColor("#4ec773")
@@ -120,9 +123,8 @@ async function repost(target, token, did) {
                 iconURL: `${target.author.avatar}`, 
                 url: `https://bsky.app/profile/${target.author.handle}` 
             })
-            .setDescription(`${desc_embed}\n-# <:rbluesky:1282450204947251263> ${link}`)
+            .setDescription(`${desc_embed}\n\n-# <:rbluesky:1282450204947251263> [veja a publicação aqui](${link})・<t:${unixEpochTimeInSeconds}:R>`)
             .setImage('https://i.imgur.com/2B01blo.png')
-            .setTimestamp();
         
         webhookClient.send({
             username: 'bolhatech.pages.dev',
