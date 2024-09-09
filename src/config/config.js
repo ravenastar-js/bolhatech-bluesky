@@ -5,7 +5,7 @@ const TG = process.env.TAG;
 
 const MAX_REQUESTS_PER_HOUR = 1666; // Limite de 1.666 registros por hora
 const MAX_REQUESTS_PER_EXECUTION = 300; // Limite de 300 solicitações por execução do CronJob
-const cronMinutes = 15;
+const cronMinutes = 8;
 
 const MAX_POINTS_PER_HOUR = 5000; // Limite de pontos por hora
 
@@ -24,6 +24,5 @@ module.exports = {
     embed_color,
     embed_bannerURL,
     wh_avatarURL,
-    wh_username,
-    MAX_REQUESTS_DAILY
+    wh_username
 };

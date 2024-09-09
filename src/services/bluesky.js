@@ -17,7 +17,9 @@ function loadState() {
         actionPoints: 0,
         lastHourReset: Date.now(),
         dailyRequestCount: 0,
-        lastDailyReset: Date.now()
+        lastDailyReset: Date.now(),
+        token: "",
+        did: "",
     };
 }
 
@@ -25,11 +27,11 @@ function saveState(state) {
     fs.writeFileSync(stateFilePath, JSON.stringify(state));
 }
 
-let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset } = loadState();
+let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did } = loadState();
 
 async function getAccessToken() {
     try {
-        if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION ) {
+        if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
             console.log('⚠️ Daily request limit reached. Waiting...');
             return;
         }
@@ -42,8 +44,10 @@ async function getAccessToken() {
         });
 
         dailyRequestCount += 3; // ➕ Increment dailyRequestCount for createSession
-        saveState({ dailyRequestCount });
+        token = data.accessJwt
+        did = data.did
 
+        saveState({ dailyRequestCount, token, did });
         return { token: data.accessJwt, did: data.did };
     } catch (err) {
         if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") {
@@ -228,8 +232,11 @@ async function main() {
         const startTime = new Date().toLocaleTimeString();
         console.log(`⏰ Tick executed ${startTime}`);
 
-        const { token, did, error } = await getAccessToken();
-        if (error === "RateLimitExceeded") return;
+        if (token.length === 0) {
+            const { error } = await getAccessToken();
+            if (error === "RateLimitExceeded")
+                return;
+        }
 
         // 📥 Fetch mentions and tags
         const { mentions } = await getMentions(token);
