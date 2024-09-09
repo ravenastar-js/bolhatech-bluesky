@@ -1,7 +1,11 @@
 require('../config/dotenv.js');
 const axios = require('axios');
 const { API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION, cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL, wh_avatarURL, wh_username } = require('../config/config');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, WebhookClient, EmbedBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, WebhookClient, Events, Client, IntentsBitField } = require('discord.js');
+
+const client = new Client({
+  intents: [IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.GuildWebhooks],
+});
 
 const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
 
@@ -139,6 +143,8 @@ async function repost(target, token, did) {
         const isoDate = target.record.createdAt;
         const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
 
+
+client.on('ready', () => {
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
@@ -168,13 +174,15 @@ async function repost(target, token, did) {
             .setDescription(`${desc_embed}\n-# \`⏰\` às <t:${unixEpochTimeInSeconds}:R>`)
             .setImage(embed_bannerURL)
 
-        webhookClient.send({
+            webhookClient.send({
             content: `@bolhatech`,
             components: [row],
             username: wh_username,
             avatarURL: wh_avatarURL,
             embeds: [WH_Embed],
         });
+})
+
 
         console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 
