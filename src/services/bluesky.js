@@ -161,7 +161,6 @@ async function repost(target, token, did) {
         const WH_Embed = new EmbedBuilder()
             .setColor(embed_color)
             .setAuthor({
-                content: `@bolhatech`,
                 name: `${target.author.handle}`,
                 iconURL: `${target.author.avatar}`,
                 url: `https://bsky.app/profile/${target.author.handle}`
@@ -170,10 +169,11 @@ async function repost(target, token, did) {
             .setImage(embed_bannerURL)
 
         webhookClient.send({
+            content: `@bolhatech`,
+            components: row,
             username: wh_username,
             avatarURL: wh_avatarURL,
             embeds: [WH_Embed],
-            components: [row]
         });
 
         console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
