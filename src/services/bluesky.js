@@ -232,8 +232,8 @@ async function main() {
 
         const startTime = new Date().toLocaleTimeString();
         console.log(`⏰ Tick executed ${startTime}`);
-
-        if (token.length === 0) {
+        let tcheck = token || ''
+        if (tcheck.length === 0) {
             const { error } = await getAccessToken();
             if (error === "RateLimitExceeded")
                 return;
