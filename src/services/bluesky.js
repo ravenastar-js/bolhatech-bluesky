@@ -29,7 +29,7 @@ let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset } = loadSta
 
 async function getAccessToken() {
     try {
-        if (dailyRequestCount + 1 > MAX_REQUESTS_DAILY) {
+        if (dailyRequestCount + 3 > MAX_REQUESTS_DAILY) {
             console.log('⚠️ Daily request limit reached. Waiting...');
             return;
         }
@@ -41,7 +41,7 @@ async function getAccessToken() {
             password: process.env.BLUESKY_PASSWORD
         });
 
-        dailyRequestCount += 1; // ➕ Increment dailyRequestCount for createSession
+        dailyRequestCount += 3; // ➕ Increment dailyRequestCount for createSession
         saveState({ dailyRequestCount });
 
         return { token: data.accessJwt, did: data.did };
