@@ -246,11 +246,5 @@ async function main() {
 }
 
 module.exports = {
-    getAccessToken,
-    getMentions,
-    getTags,
-    checkIfReposted,
-    createRepostData,
-    repost,
     main
 };
