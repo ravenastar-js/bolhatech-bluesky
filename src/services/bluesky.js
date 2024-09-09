@@ -172,8 +172,8 @@ async function repost(target, token, did) {
         webhookClient.send({
             username: wh_username,
             avatarURL: wh_avatarURL,
-            components: [row],
-            embeds: [WH_Embed]
+            embeds: [WH_Embed],
+            components: [row]
         });
 
         console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
