@@ -144,17 +144,17 @@ async function repost(target, token, did) {
                 new ButtonBuilder()
                     .setEmoji("1282450204947251263")
                     .setLabel('PUBLICAÇÃO REPOSTADA')
-                    .setURL(link)
+                    .setURL(`${link}`)
                     .setStyle(ButtonStyle.Link),
                 new ButtonBuilder()
                     .setEmoji("1282709273939284093")
                     .setLabel(`${target.author.handle}`)
-                    .setURL(`https://discord.discloudbot.com`)
+                    .setURL(`https://bsky.app/profile/${target.author.handle}`)
                     .setStyle(ButtonStyle.Link),
                 new ButtonBuilder()
                     .setEmoji("1282709273939284093")
-                    .setLabel(`https://bsky.app/profile/@${wh_username}`)
-                    .setURL(`https://discord.discloudbot.com`)
+                    .setLabel(`@${wh_username}`)
+                    .setURL(`https://bsky.app/profile/@${wh_username}`)
                     .setStyle(ButtonStyle.Link),
             );
 
