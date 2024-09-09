@@ -263,7 +263,7 @@ async function main() {
 
         // 🔄 Repost all unreposted posts
         for (const post of unrepostedPosts) {
-            const { delay } = require('../utils/delay')
+            const delay = require('../utils/delay')
             await repost(post, token, did);
             await delay(delayTime); // ⏰ delay time
         }
