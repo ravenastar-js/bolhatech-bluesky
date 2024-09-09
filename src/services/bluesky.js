@@ -1,30 +1,49 @@
-const dotenv = require('dotenv');
-const { CronJob } = require('cron');
+require('../config/dotenv.js');
 const axios = require('axios');
+const { API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION, cronMinutes, MAX_POINTS_PER_HOUR, embedColor, bannerURL, avatarURL, webhookUsername, MAX_REQUESTS_DAILY } = require('../config/config');
 const { WebhookClient, EmbedBuilder } = require('discord.js');
 
-dotenv.config();
-
 const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
-const API_URL = 'https://bsky.social/xrpc';
-const TG = process.env.TAG;
 
-const MAX_REQUESTS_PER_HOUR = 1666; // Limit of 1,666 records per hour
-const MAX_REQUESTS_PER_EXECUTION = 300; // Limit of 300 requests per CronJob execution
-const cronMinutes = 8;
+const fs = require('fs');
+const stateFilePath = './state.json';
 
-let actionPoints = 0; // Action Point Counter
-const MAX_POINTS_PER_HOUR = 5000; // Points limit per hour
+function loadState() {
+    if (fs.existsSync(stateFilePath)) {
+        const rawData = fs.readFileSync(stateFilePath);
+        return JSON.parse(rawData);
+    }
+    return {
+        actionPoints: 0,
+        lastHourReset: Date.now(),
+        dailyRequestCount: 0,
+        lastDailyReset: Date.now()
+    };
+}
 
-let lastHourReset = Date.now();
+function saveState(state) {
+    fs.writeFileSync(stateFilePath, JSON.stringify(state));
+}
+
+let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset } = loadState();
 
 async function getAccessToken() {
     try {
+        if (dailyRequestCount + 1 > MAX_REQUESTS_DAILY) {
+            console.log('⚠️ Daily request limit reached. Waiting...');
+            return;
+        }
+
+
         // 🔑 Request an access token using Bluesky credentials
         const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
             identifier: process.env.BLUESKY_USERNAME,
             password: process.env.BLUESKY_PASSWORD
         });
+
+        dailyRequestCount += 1; // ➕ Increment dailyRequestCount for createSession
+        saveState({ dailyRequestCount });
+
         return { token: data.accessJwt, did: data.did };
     } catch (err) {
         if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") {
@@ -105,7 +124,7 @@ async function repost(target, token, did) {
         });
 
         actionPoints += 3; // ➕ Increment action points for CREATE
-
+        saveState({ actionPoints });
         const t_uri = target.uri;
         const post_id = t_uri.split('/').pop();
         const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
@@ -113,23 +132,23 @@ async function repost(target, token, did) {
         let rtext = target.record?.text || "";
         let desc_embed = rtext.length === 0 ? "" : rtext;
 
-        const isoDate = target.record.createdAt
+        const isoDate = target.record.createdAt;
         const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
-        
+
         const WH_Embed = new EmbedBuilder()
-            .setColor("#4ec773")
-            .setAuthor({ 
+            .setColor(embedColor)
+            .setAuthor({
                 content: `@bolhatech`,
-                name: `${target.author.handle}`, 
-                iconURL: `${target.author.avatar}`, 
-                url: `https://bsky.app/profile/${target.author.handle}` 
+                name: `${target.author.handle}`,
+                iconURL: `${target.author.avatar}`,
+                url: `https://bsky.app/profile/${target.author.handle}`
             })
-            .setDescription(`${desc_embed}\n\n-# <:rbluesky:1282450204947251263> [veja a publicação aqui](${link})・<t:${unixEpochTimeInSeconds}:R>`)
-            .setImage('https://i.imgur.com/2B01blo.png')
-        
+            .setDescription(`${desc_embed}\n\n-# <:rbluesky:1282450204947251263> veja a publicação aqui・<t:${unixEpochTimeInSeconds}:R>`)
+            .setImage(bannerURL);
+
         webhookClient.send({
-            username: 'bolhatech.pages.dev',
-            avatarURL: 'https://i.imgur.com/0q9F06h.png',
+            username: webhookUsername,
+            avatarURL: avatarURL,
             embeds: [WH_Embed]
         });
 
@@ -163,11 +182,6 @@ async function checkIfReposted(target, token) {
     }
 }
 
-// ⏰ delay
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 async function main() {
     try {
         if (!process.env.BLUESKY_USERNAME || !process.env.BLUESKY_PASSWORD) {
@@ -179,7 +193,15 @@ async function main() {
         if (now - lastHourReset >= 3600000) { // ⏰ 1 hour in milliseconds
             actionPoints = 0;
             lastHourReset = now;
+            saveState({ actionPoints, lastHourReset });
             console.log('🔄 Points reset to new time');
+        }
+
+        if (now - lastDailyReset >= 86400000) { // ⏰ 24 hours in milliseconds
+            dailyRequestCount = 0;
+            lastHourReset = now;
+            saveState({ dailyRequestCount, lastDailyReset });
+            console.log('🔄 Daily request count reset');
         }
 
         const startTime = new Date().toLocaleTimeString();
@@ -223,18 +245,12 @@ async function main() {
     }
 }
 
-// ⏰ Run CronJob time interval
-const cjt = `*/${cronMinutes} * * * *`; // ⏰ time interval in minutes
-const job = new CronJob(cjt, main);
-
-job.start();
-
-// 🟢 Print "bot started" when the job starts
-console.log(`
-███████████████╗█████╗██████╗█████████████████████╗ 
-██╔════╚══██╔══██╔══████╔══██╚══██╔══██╔════██╔══██╗
-███████╗  ██║  █████████████╔╝  ██║  █████╗ ██║  ██║
-╚════██║  ██║  ██╔══████╔══██╗  ██║  ██╔══╝ ██║  ██║
-███████║  ██║  ██║  ████║  ██║  ██║  █████████████╔╝
-╚══════╝  ╚═╝  ╚═╚═╝  ╚═╝  ╚═╝  ╚══════╚═════╝ 
-🟢 by bolhatech.pages.dev`);
+module.exports = {
+    getAccessToken,
+    getMentions,
+    getTags,
+    checkIfReposted,
+    createRepostData,
+    repost,
+    main
+};
