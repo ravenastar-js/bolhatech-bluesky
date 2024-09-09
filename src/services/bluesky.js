@@ -166,9 +166,8 @@ async function repost(target, token, did) {
                 iconURL: `${target.author.avatar}`,
                 url: `https://bsky.app/profile/${target.author.handle}`
             })
-            .setDescription(`${desc_embed}`)
+            .setDescription(`${desc_embed}\n-# \`⏰\` às ${unixEpochTimeInSeconds}`)
             .setImage(embed_bannerURL)
-            .setTimestamp(unixEpochTimeInSeconds);
 
         webhookClient.send({
             username: wh_username,
