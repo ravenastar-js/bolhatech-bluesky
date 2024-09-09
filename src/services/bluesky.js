@@ -1,7 +1,7 @@
 require('../config/dotenv.js');
 const axios = require('axios');
 const { API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION, cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL, wh_avatarURL, wh_username } = require('../config/config');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, WebhookClient } = require('discord.js');
+const { EmbedBuilder, WebhookClient } = require('discord.js');
 
 const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
 
@@ -139,26 +139,6 @@ async function repost(target, token, did) {
         const isoDate = target.record.createdAt;
         const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
 
-
-        const row = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setEmoji("1282450204947251263")
-                    .setLabel('PUBLICAÇÃO REPOSTADA')
-                    .setURL(`${link}`)
-                    .setStyle(ButtonStyle.Link),
-                new ButtonBuilder()
-                    .setEmoji("1282709273939284093")
-                    .setLabel(`${target.author.handle}`)
-                    .setURL(`https://bsky.app/profile/${target.author.handle}`)
-                    .setStyle(ButtonStyle.Link),
-                new ButtonBuilder()
-                    .setEmoji("1282709273939284093")
-                    .setLabel(`@${wh_username}`)
-                    .setURL(`https://bsky.app/profile/@${wh_username}`)
-                    .setStyle(ButtonStyle.Link),
-            );
-
         const WH_Embed = new EmbedBuilder()
             .setColor(embed_color)
             .setAuthor({
@@ -166,12 +146,11 @@ async function repost(target, token, did) {
                 iconURL: `${target.author.avatar}`,
                 url: `https://bsky.app/profile/${target.author.handle}`
             })
-            .setDescription(`${desc_embed}\n-# \`⏰\` às <t:${unixEpochTimeInSeconds}:R>`)
+            .setDescription(`${desc_embed}\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link})・[${target.author.handle}](https://bsky.app/profile/${target.author.handle})・[@${wh_username}](https://bsky.app/profile/@${wh_username})・\`⏰\` às <t:${unixEpochTimeInSeconds}:R>`)
             .setImage(embed_bannerURL)
 
             webhookClient.send({
-            content: `@bolhatech`,
-            components: [row],
+            content: `<@&1282578310383145024>`,
             username: wh_username,
             avatarURL: wh_avatarURL,
             embeds: [WH_Embed],
