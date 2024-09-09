@@ -146,7 +146,7 @@ async function repost(target, token, did) {
                 iconURL: `${target.author.avatar}`,
                 url: `https://bsky.app/profile/${target.author.handle}`
             })
-            .setDescription(`${desc_embed}\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})・\`⏰\` às <t:${unixEpochTimeInSeconds}:R>`)
+            .setDescription(`${desc_embed}\n-#.\`⏰\` Publicação postada às <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
             .setImage(embed_bannerURL)
 
             webhookClient.send({
