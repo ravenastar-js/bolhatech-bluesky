@@ -119,6 +119,7 @@ async function repost(target, token, did) {
         const WH_Embed = new EmbedBuilder()
             .setColor("#4ec773")
             .setAuthor({ 
+                content: `@bolhatech`,
                 name: `${target.author.handle}`, 
                 iconURL: `${target.author.avatar}`, 
                 url: `https://bsky.app/profile/${target.author.handle}` 
