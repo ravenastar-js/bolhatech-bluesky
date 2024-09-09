@@ -7,7 +7,6 @@ const MAX_REQUESTS_PER_HOUR = 1666; // Limite de 1.666 registros por hora
 const MAX_REQUESTS_PER_EXECUTION = 300; // Limite de 300 solicitações por execução do CronJob
 const cronMinutes = 15;
 
-const MAX_REQUESTS_DAILY = 300;
 const MAX_POINTS_PER_HOUR = 5000; // Limite de pontos por hora
 
 const embed_color = "#4ec773"

@@ -1,6 +1,6 @@
 require('../config/dotenv.js');
 const axios = require('axios');
-const { API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION, cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL, wh_avatarURL, wh_username, MAX_REQUESTS_DAILY } = require('../config/config');
+const { API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION, cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL, wh_avatarURL, wh_username } = require('../config/config');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, WebhookClient, EmbedBuilder } = require('discord.js');
 
 const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
@@ -29,7 +29,7 @@ let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset } = loadSta
 
 async function getAccessToken() {
     try {
-        if (dailyRequestCount + 3 > MAX_REQUESTS_DAILY) {
+        if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION ) {
             console.log('⚠️ Daily request limit reached. Waiting...');
             return;
         }
