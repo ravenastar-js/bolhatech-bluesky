@@ -170,7 +170,7 @@ async function repost(target, token, did) {
 
         webhookClient.send({
             content: `@bolhatech`,
-            components: row,
+            components: [row],
             username: wh_username,
             avatarURL: wh_avatarURL,
             embeds: [WH_Embed],
