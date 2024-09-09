@@ -10,10 +10,10 @@ const cronMinutes = 8;
 const MAX_REQUESTS_DAILY = 300;
 const MAX_POINTS_PER_HOUR = 5000; // Limite de pontos por hora
 
-const embedColor = "#4ec773"
-const bannerURL = "https://i.imgur.com/2B01blo.png"
-const avatarURL = "https://i.imgur.com/0q9F06h.png"
-const webhookUsername = process.env.BLUESKY_USERNAME
+const embed_color = "#4ec773"
+const embed_bannerURL = "https://i.imgur.com/2B01blo.png"
+const wh_avatarURL = "https://i.imgur.com/0q9F06h.png"
+const wh_username = process.env.BLUESKY_USERNAME
 
 module.exports = {
     API_URL,
@@ -22,9 +22,9 @@ module.exports = {
     MAX_REQUESTS_PER_EXECUTION,
     cronMinutes,
     MAX_POINTS_PER_HOUR,
-    embedColor,
-    bannerURL,
-    avatarURL,
-    webhookUsername,
+    embed_color,
+    embed_bannerURL,
+    wh_avatarURL,
+    wh_username,
     MAX_REQUESTS_DAILY
 };
