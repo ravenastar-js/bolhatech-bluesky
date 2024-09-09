@@ -1,5 +1,6 @@
 require('../config/dotenv.js');
 const axios = require('axios');
+const { delay } = require('../utils/delay.js')
 const { API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION, cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL, wh_avatarURL, wh_username } = require('../config/config');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, WebhookClient, EmbedBuilder } = require('discord.js');
 
