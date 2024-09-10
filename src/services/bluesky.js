@@ -1,3 +1,4 @@
+// 🌐 Carrega as variáveis de ambiente
 require('../config/dotenv.js');
 const axios = require('axios');
 const fs = require('fs');
@@ -11,7 +12,7 @@ const {
 const stateFilePath = './state.json';
 const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
 
-// Funções para carregar e salvar o estado
+// 💾 Função para carregar o estado do arquivo JSON
 function loadState() {
     if (fs.existsSync(stateFilePath)) {
         const rawData = fs.readFileSync(stateFilePath);
@@ -27,17 +28,20 @@ function loadState() {
     };
 }
 
+// 💾 Função para salvar o estado no arquivo JSON
 function saveState(state) {
     fs.writeFileSync(stateFilePath, JSON.stringify(state));
 }
 
+// 🔄 Carrega o estado inicial
 let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did } = loadState();
 
+// 🔑 Função para obter o token de acesso
 async function getAccessToken() {
     try {
         if (token?.length > 0) return;
         if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
-            console.log('⚠️ Daily request limit reached. Waiting...');
+            console.log('⚠️ Limite diário de solicitações atingido. Aguardando...');
             return;
         }
         const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
@@ -55,13 +59,15 @@ async function getAccessToken() {
     }
 }
 
+
+// 🔄 Função para trocar o token de acesso
 async function changeToken() {
     try {
         if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
-            console.log('⚠️ Daily request limit reached. Waiting...');
+            console.log('⚠️ Limite diário de solicitações atingido. Aguardando...');
             return;
         }
-        console.log('🔄 changeToken updated');
+        console.log('🔄 token atualizado.');
         
         const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
             identifier: process.env.BLUESKY_USERNAME,
@@ -78,6 +84,7 @@ async function changeToken() {
     }
 }
 
+// 🚫 Função para lidar com erros de limite de taxa
 function handleRateLimitError(err, functionName) {
     if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") {
         console.log(`[ 🔴 ratelimit-reset in ${functionName} ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
@@ -86,7 +93,7 @@ function handleRateLimitError(err, functionName) {
     }
 }
 
-
+// 📣 Função para obter menções
 async function getMentions(token) {
     try {
         const { data } = await axios.get(`${API_URL}/app.bsky.notification.listNotifications`, {
@@ -98,6 +105,7 @@ async function getMentions(token) {
     }
 }
 
+// 🔖 Função para obter tags
 async function getTags(token) {
     try {
         const configTag = {
@@ -116,7 +124,7 @@ async function getTags(token) {
     }
 }
 
-
+// 📝 Função para criar dados de repostagem
 const createRepostData = (target, did) => ({
     $type: 'app.bsky.feed.repost',
     repo: did,
@@ -127,6 +135,7 @@ const createRepostData = (target, did) => ({
     },
 });
 
+// 🔔 Função para enviar notificação via webhook no Discord
 function sendWebhookNotification(target, repostData) {
     const t_uri = target.uri;
     const post_id = t_uri.split('/').pop();
@@ -154,18 +163,19 @@ function sendWebhookNotification(target, repostData) {
         avatarURL: wh_avatarURL,
         embeds: [WH_Embed],
     });
-    console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
+    console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 }
 
+// 🔄 Função para repostar uma publicação
 async function repost(target, token, did) {
     try {
         if (!target.uri || !target.cid) {
-            console.error('Invalid target for repost');
+            console.error('🎯 Alvo inválido para repostagem');
             return;
         }
 
         if (actionPoints + 3 > MAX_POINTS_PER_HOUR) {
-            console.log('⚠️ Points per hour limit reached. Waiting...');
+            console.log('⚠️ Limite de pontos por hora atingido. Aguardando...');
             return;
         }
 
@@ -185,8 +195,7 @@ async function repost(target, token, did) {
     }
 }
 
-
-
+// 🔍 Função para verificar se uma publicação já foi repostada
 async function checkIfReposted(target, token) {
     try {
         const config = {
@@ -206,6 +215,8 @@ async function checkIfReposted(target, token) {
     }
 }
 
+
+// 🏁 Função principal que coordena as operações
 async function main() {
     try {
         validateEnvVariables();
@@ -224,7 +235,7 @@ async function main() {
         const unrepostedPosts = await filterUnrepostedPosts(allPosts, token);
 
         if (unrepostedPosts.length === 0) {
-            console.log('⋆.˚🦋༘⋆');
+            console.log('══════✮❁•° 🦋 °•❁✮══════');
             return;
         }
 
@@ -234,29 +245,32 @@ async function main() {
     }
 }
 
+// ✅ Função para validar variáveis de ambiente
 function validateEnvVariables() {
     if (!process.env.BLUESKY_USERNAME || !process.env.BLUESKY_PASSWORD) {
         throw new Error('Missing BLUESKY_USERNAME or BLUESKY_PASSWORD in environment variables');
     }
 }
 
+// 🔄 Função para resetar contadores se necessário
 function resetCountersIfNeeded() {
     const now = Date.now();
     if (now - lastHourReset >= 3600000) {
         actionPoints = 0;
         lastHourReset = Date.now();
         saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
-        console.log('🔄 Points reset to new time');
+        console.log('🔄 Pontos redefinidos para novo horário.');
     }
 
     if (now - lastDailyReset >= 86400000) {
         dailyRequestCount = 0;
         lastHourReset = Date.now();
         saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
-        console.log('🔄 Daily request count reset');
+        console.log('🔄 Redefinição da contagem de solicitações diárias.');
     }
 }
 
+// 🔍 Função para filtrar publicações não repostadas
 async function filterUnrepostedPosts(allPosts, token) {
     const unrepostedPosts = [];
     for (const post of allPosts) {
@@ -268,6 +282,7 @@ async function filterUnrepostedPosts(allPosts, token) {
     return unrepostedPosts;
 }
 
+// 🔄 Função para repostar publicações não repostadas
 async function repostUnrepostedPosts(unrepostedPosts, token, did) {
     const maxRepostsPerExecution = Math.min(MAX_REQUESTS_PER_EXECUTION, Math.floor(MAX_REQUESTS_PER_HOUR / (60 / cronMinutes)));
     const delayTime = Math.max((cronMinutes * 60 * 1000) / maxRepostsPerExecution, 1000);
@@ -279,7 +294,9 @@ async function repostUnrepostedPosts(unrepostedPosts, token, did) {
     }
 }
 
+// ⏰ Configura intervalo para trocar o token periodicamente
 let intervalo = 30 * 60 * 1000;
 setInterval(changeToken, intervalo);
 
+// 📤 Exporta a função principal
 module.exports = { main };
