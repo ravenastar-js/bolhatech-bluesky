@@ -154,6 +154,7 @@ function sendWebhookNotification(target, repostData) {
         avatarURL: wh_avatarURL,
         embeds: [WH_Embed],
     });
+    console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 }
 
 async function repost(target, token, did) {
@@ -178,7 +179,6 @@ async function repost(target, token, did) {
 
         sendWebhookNotification(target, repostData);
 
-        console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
         return { message: 'Reposted successfully', data };
     } catch (err) {
         handleRateLimitError(err, 'repost');
