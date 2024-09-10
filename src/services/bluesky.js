@@ -1,13 +1,17 @@
 require('../config/dotenv.js');
 const axios = require('axios');
-const { API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION, cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL, wh_avatarURL, wh_username } = require('../config/config');
+const fs = require('fs');
 const { EmbedBuilder, WebhookClient } = require('discord.js');
+const {
+    API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
+    cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL,
+    wh_avatarURL, wh_username
+} = require('../config/config');
 
+const stateFilePath = './state.json';
 const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
 
-const fs = require('fs');
-const stateFilePath = './state.json';
-
+// Funções para carregar e salvar o estado
 function loadState() {
     if (fs.existsSync(stateFilePath)) {
         const rawData = fs.readFileSync(stateFilePath);
@@ -36,68 +40,66 @@ async function getAccessToken() {
             console.log('⚠️ Daily request limit reached. Waiting...');
             return;
         }
-        // 🔑 Request an access token using Bluesky credentials
         const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
             identifier: process.env.BLUESKY_USERNAME,
             password: process.env.BLUESKY_PASSWORD
         });
 
-        dailyRequestCount += 3; // ➕ Increment dailyRequestCount for createSession
-        token = data.accessJwt
-        did = data.did
+        dailyRequestCount += 3;
+        token = data.accessJwt;
+        did = data.did;
 
-        return saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did })
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
     } catch (err) {
-        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in getAccessToken ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
-        console.error('Error getting access token:', err.message || err);
-        throw err;
+        handleRateLimitError(err, 'getAccessToken');
     }
 }
 
 async function changeToken() {
     try {
-    if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
-        console.log('⚠️ Daily request limit reached. Waiting...');
-        return;
+        if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
+            console.log('⚠️ Daily request limit reached. Waiting...');
+            return;
+        }
+        console.log('🔄 changeToken updated');
+
+        const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
+            identifier: process.env.BLUESKY_USERNAME,
+            password: process.env.BLUESKY_PASSWORD
+        });
+
+        dailyRequestCount += 3;
+        token = data.accessJwt;
+        did = data.did;
+
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+    } catch (err) {
+        handleRateLimitError(err, 'changeToken');
     }
-    console.log('🔄 changeToken updated');
-    
-    const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
-        identifier: process.env.BLUESKY_USERNAME,
-        password: process.env.BLUESKY_PASSWORD
-    });
-
-    dailyRequestCount += 3; // ➕ Increment dailyRequestCount for createSession
-    token = data.accessJwt
-    did = data.did
-
-    return saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did })
-} catch (err) {
-    if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in getAccessToken ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
-    console.error('Error changeToken:', err.message || err);
-    throw err;
 }
+
+function handleRateLimitError(err, functionName) {
+    if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") {
+        console.log(`[ 🔴 ratelimit-reset in ${functionName} ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
+    } else {
+        console.error(`Error in ${functionName}:`, err.message || err);
+    }
 }
+
 
 async function getMentions(token) {
     try {
-        // 📥 Fetch mentions from Bluesky notifications
         const { data } = await axios.get(`${API_URL}/app.bsky.notification.listNotifications`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         return { mentions: data.notifications.filter(({ reason }) => reason === 'mention') };
     } catch (err) {
-        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in getMentions ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
-        console.error('Error getting mentions:', err);
-        throw err;
+        handleRateLimitError(err, 'getMentions');
     }
 }
 
 async function getTags(token) {
     try {
-        // 🏷️ Search for posts with a specific tag
         const configTag = {
             method: 'get',
             maxBodyLength: Infinity,
@@ -110,15 +112,12 @@ async function getTags(token) {
         const { data } = await axios(configTag);
         return { tags: data.posts.filter(({ indexedAt }) => indexedAt).sort((a, b) => a.typeid - b.typeid) };
     } catch (err) {
-        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in getTags ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
-        console.error('Error getting tags:', err);
-        throw err;
-
+        handleRateLimitError(err, 'getTags');
     }
 }
 
+
 const createRepostData = (target, did) => ({
-    // 📝 Create repost data structure
     $type: 'app.bsky.feed.repost',
     repo: did,
     collection: 'app.bsky.feed.repost',
@@ -135,63 +134,60 @@ async function repost(target, token, did) {
             return;
         }
 
-        // 🔍 Check if the points limit has been reached
         if (actionPoints + 3 > MAX_POINTS_PER_HOUR) {
             console.log('⚠️ Points per hour limit reached. Waiting...');
             return;
         }
 
-        // 📝 Create repost data and send repost request
         const repostData = createRepostData(target, did);
-
         const { data } = await axios.post(`${API_URL}/com.atproto.repo.createRecord`, repostData, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        actionPoints += 3; // ➕ Increment action points for CREATE
+        actionPoints += 3;
         saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
-        const t_uri = target.uri;
-        const post_id = t_uri.split('/').pop();
-        const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
 
-        let rtext = target.record?.text || "";
-        let desc_embed = rtext.length === 0 ? "" : ` \`\`\`\n${rtext}\n\`\`\` `;
-
-        const isoDate = target.record.createdAt;
-        const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
-
-        const WH_Embed = new EmbedBuilder()
-            .setColor(embed_color)
-            .setAuthor({
-                name: `${target.author.handle}`,
-                iconURL: `${target.author.avatar}`,
-                url: `https://bsky.app/profile/${target.author.handle}`
-            })
-            .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
-            .setImage(embed_bannerURL)
-
-        webhookClient.send({
-            content: `<@&1282578310383145024>`,
-            username: wh_username,
-            avatarURL: wh_avatarURL,
-            embeds: [WH_Embed],
-        });
+        sendWebhookNotification(target, repostData);
 
         console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
-
         return { message: 'Reposted successfully', data };
     } catch (err) {
-        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in repost ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
-        console.error('Error reposting:', err);
-        throw err;
+        handleRateLimitError(err, 'repost');
     }
 }
 
+function sendWebhookNotification(target, repostData) {
+    const t_uri = target.uri;
+    const post_id = t_uri.split('/').pop();
+    const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
+
+    let rtext = target.record?.text || "";
+    let desc_embed = rtext.length === 0 ? "" : ` \`\`\`\n${rtext}\n\`\`\` `;
+
+    const isoDate = target.record.createdAt;
+    const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
+
+    const WH_Embed = new EmbedBuilder()
+        .setColor(embed_color)
+        .setAuthor({
+            name: `${target.author.handle}`,
+            iconURL: `${target.author.avatar}`,
+            url: `https://bsky.app/profile/${target.author.handle}`
+        })
+        .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> PUBLICAÇÃO REPOSTADA por @${wh_username}`)
+        .setImage(embed_bannerURL);
+
+    webhookClient.send({
+        content: `<@&1282578310383145024>`,
+        username: wh_username,
+        avatarURL: wh_avatarURL,
+        embeds: [WH_Embed],
+    });
+}
+
+
 async function checkIfReposted(target, token) {
     try {
-        // 🔍 Check if the post has already been reposted
         const config = {
             method: 'get',
             maxBodyLength: Infinity,
@@ -205,78 +201,84 @@ async function checkIfReposted(target, token) {
         const { data } = await axios(config);
         return data.repostedBy.some(user => user.handle === process.env.BLUESKY_USERNAME);
     } catch (err) {
-        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in checkIfReposted ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
-        console.error('Error checking repost status:', err);
-        throw err
+        handleRateLimitError(err, 'checkIfReposted');
     }
 }
 
 async function main() {
     try {
-        if (!process.env.BLUESKY_USERNAME || !process.env.BLUESKY_PASSWORD) {
-            throw new Error('Missing BLUESKY_USERNAME or BLUESKY_PASSWORD in environment variables');
-        }
+        validateEnvVariables();
 
-        // 🔄 Resetting Point Counters
-        const now = Date.now();
-        if (now - lastHourReset >= 3600000) { // ⏰ 1 hour in milliseconds
-            actionPoints = 0;
-            lastHourReset = Date.now();
-            saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
-            console.log('🔄 Points reset to new time');
-        }
-
-        if (now - lastDailyReset >= 86400000) { // ⏰ 24 hours in milliseconds
-            dailyRequestCount = 0;
-            lastHourReset = Date.now();
-            saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
-            console.log('🔄 Daily request count reset');
-        }
+        resetCountersIfNeeded();
 
         const startTime = new Date().toLocaleTimeString();
         console.log(`⏰ Tick executed ${startTime}`);
 
-        await getAccessToken()
+        await getAccessToken();
 
-        // 📥 Fetch mentions and tags
         const { mentions } = await getMentions(token);
         const { tags } = await getTags(token);
 
         const allPosts = [...mentions, ...tags];
-        const unrepostedPosts = [];
-
-        // 🔍 Check each post if it has been reposted
-        for (const post of allPosts) {
-            const isReposted = await checkIfReposted(post, token);
-            if (!isReposted) {
-                unrepostedPosts.push(post);
-            }
-        }
+        const unrepostedPosts = await filterUnrepostedPosts(allPosts, token);
 
         if (unrepostedPosts.length === 0) {
             console.log('⋆.˚🦋༘⋆');
             return;
         }
 
-        const maxRepostsPerExecution = Math.min(MAX_REQUESTS_PER_EXECUTION, Math.floor(MAX_REQUESTS_PER_HOUR / (60 / cronMinutes)));
-        const delayTime = Math.max((cronMinutes * 60 * 1000) / maxRepostsPerExecution, 1000);
-
-        // 🔄 Repost all unreposted posts
-        for (const post of unrepostedPosts) {
-            const delay = require('../utils/delay')
-            await repost(post, token, did);
-            await delay(delayTime); // ⏰ delay time
-        }
+        await repostUnrepostedPosts(unrepostedPosts, token, did);
     } catch (err) {
-        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in main] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
-        console.error('Error main:', err);
-        throw err
+        handleRateLimitError(err, 'main');
     }
 }
-// 30 minutos em milissegundos
-let intervalo = 30 * 60 * 1000;
 
+function validateEnvVariables() {
+    if (!process.env.BLUESKY_USERNAME || !process.env.BLUESKY_PASSWORD) {
+        throw new Error('Missing BLUESKY_USERNAME or BLUESKY_PASSWORD in environment variables');
+    }
+}
+
+function resetCountersIfNeeded() {
+    const now = Date.now();
+    if (now - lastHourReset >= 3600000) {
+        actionPoints = 0;
+        lastHourReset = Date.now();
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        console.log('🔄 Points reset to new time');
+    }
+
+    if (now - lastDailyReset >= 86400000) {
+        dailyRequestCount = 0;
+        lastHourReset = Date.now();
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        console.log('🔄 Daily request count reset');
+    }
+}
+
+async function filterUnrepostedPosts(allPosts, token) {
+    const unrepostedPosts = [];
+    for (const post of allPosts) {
+        const isReposted = await checkIfReposted(post, token);
+        if (!isReposted) {
+            unrepostedPosts.push(post);
+        }
+    }
+    return unrepostedPosts;
+}
+
+async function repostUnrepostedPosts(unrepostedPosts, token, did) {
+    const maxRepostsPerExecution = Math.min(MAX_REQUESTS_PER_EXECUTION, Math.floor(MAX_REQUESTS_PER_HOUR / (60 / cronMinutes)));
+    const delayTime = Math.max((cronMinutes * 60 * 1000) / maxRepostsPerExecution, 1000);
+
+    for (const post of unrepostedPosts) {
+        const delay = require('../utils/delay');
+        await repost(post, token, did);
+        await delay(delayTime);
+    }
+}
+
+let intervalo = 30 * 60 * 1000;
 setInterval(changeToken, intervalo);
-module.exports = {
-    main
-};
+
+module.exports = { main };
