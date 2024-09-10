@@ -196,14 +196,14 @@ async function main() {
         const now = Date.now();
         if (now - lastHourReset >= 3600000) { // ⏰ 1 hour in milliseconds
             actionPoints = 0;
-            lastHourReset = now;
+            lastHourReset = Date.now();
             saveState({ actionPoints, lastHourReset });
             console.log('🔄 Points reset to new time');
         }
 
         if (now - lastDailyReset >= 86400000) { // ⏰ 24 hours in milliseconds
             dailyRequestCount = 0;
-            lastHourReset = now;
+            lastHourReset = Date.now();
             saveState({ dailyRequestCount, lastDailyReset });
             console.log('🔄 Daily request count reset');
         }
