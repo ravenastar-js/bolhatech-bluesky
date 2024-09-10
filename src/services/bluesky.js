@@ -54,6 +54,9 @@ async function getAccessToken() {
             console.log(`[ 🔴 ratelimit-reset in getAccessToken ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
             return { error: "RateLimitExceeded" };
         }
+        token = "";
+        did = "";
+        saveState({ token, did });
         console.error('Error getting access token:', err.message || err);
         throw err;
     }
