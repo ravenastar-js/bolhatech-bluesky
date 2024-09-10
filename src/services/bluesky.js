@@ -69,8 +69,17 @@ async function getMentions(token) {
         });
         return { mentions: data.notifications.filter(({ reason }) => reason === 'mention') };
     } catch (err) {
-        console.error('Error getting mentions:', err);
-        throw err;
+        switch (err.error) {
+        case "ExpiredToken":
+            await getAccessToken();
+            break;
+        case "RateLimitExceeded":
+            console.log(`[🔴 ratelimit-reset in getMentions] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`);
+            break;
+        default:
+            console.error('Error getting mentions:', err);
+            throw err;
+        }
     }
 }
 
@@ -89,8 +98,17 @@ async function getTags(token) {
         const { data } = await axios(configTag);
         return { tags: data.posts.filter(({ indexedAt }) => indexedAt).sort((a, b) => a.typeid - b.typeid) };
     } catch (err) {
-        console.error('Error getting tags:', err);
-        throw err;
+        switch (err.error) {
+        case "ExpiredToken":
+            await getAccessToken();
+            break;
+        case "RateLimitExceeded":
+            console.log(`[🔴 ratelimit-reset in getTags] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`);
+            break;
+        default:
+            console.error('Error getting tags:', err);
+            throw err;
+        }
     }
 }
 
