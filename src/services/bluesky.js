@@ -60,6 +60,8 @@ async function changeToken() {
         console.log('⚠️ Daily request limit reached. Waiting...');
         return;
     }
+    console.log('🔄 changeToken updated');
+    
     const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
         identifier: process.env.BLUESKY_USERNAME,
         password: process.env.BLUESKY_PASSWORD
