@@ -31,12 +31,11 @@ let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did
 
 async function getAccessToken() {
     try {
+        if (token?.length > 0) return;
         if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
             console.log('⚠️ Daily request limit reached. Waiting...');
             return;
         }
-
-
         // 🔑 Request an access token using Bluesky credentials
         const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
             identifier: process.env.BLUESKY_USERNAME,
@@ -47,19 +46,25 @@ async function getAccessToken() {
         token = data.accessJwt
         did = data.did
 
-        saveState({ dailyRequestCount, token, did });
-        return { token: data.accessJwt, did: data.did };
+        return saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did })
     } catch (err) {
-        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") {
-            console.log(`[ 🔴 ratelimit-reset in getAccessToken ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
-            return { error: "RateLimitExceeded" };
-        }
-        token = "";
-        did = "";
-        saveState({ token, did });
+        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in getAccessToken ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
         console.error('Error getting access token:', err.message || err);
         throw err;
     }
+}
+
+async function changeToken() {
+    const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
+        identifier: process.env.BLUESKY_USERNAME,
+        password: process.env.BLUESKY_PASSWORD
+    });
+
+    dailyRequestCount += 3; // ➕ Increment dailyRequestCount for createSession
+    token = data.accessJwt
+    did = data.did
+
+    return saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did })
 }
 
 async function getMentions(token) {
@@ -69,22 +74,12 @@ async function getMentions(token) {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
-        });
+        })
         return { mentions: data.notifications.filter(({ reason }) => reason === 'mention') };
     } catch (err) {
-        switch (err.error) {
-        case "ExpiredToken":
-            token = "";
-            did = "";
-            saveState({ token, did });
-            break;
-        case "RateLimitExceeded":
-            console.log(`[🔴 ratelimit-reset in getMentions] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`);
-            break;
-        default:
-            console.error('Error getting mentions:', err);
-            throw err;
-        }
+        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in getMentions ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
+        console.error('Error getting mentions:', err);
+        throw err;
     }
 }
 
@@ -103,19 +98,10 @@ async function getTags(token) {
         const { data } = await axios(configTag);
         return { tags: data.posts.filter(({ indexedAt }) => indexedAt).sort((a, b) => a.typeid - b.typeid) };
     } catch (err) {
-        switch (err.error) {
-        case "ExpiredToken":
-            token = "";
-            did = "";
-            saveState({ token, did });
-            break;
-        case "RateLimitExceeded":
-            console.log(`[🔴 ratelimit-reset in getTags] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`);
-            break;
-        default:
-            console.error('Error getting tags:', err);
-            throw err;
-        }
+        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in getTags ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
+        console.error('Error getting tags:', err);
+        throw err;
+
     }
 }
 
@@ -153,7 +139,7 @@ async function repost(target, token, did) {
         });
 
         actionPoints += 3; // ➕ Increment action points for CREATE
-        saveState({ actionPoints });
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
         const t_uri = target.uri;
         const post_id = t_uri.split('/').pop();
         const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
@@ -174,7 +160,7 @@ async function repost(target, token, did) {
             .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
             .setImage(embed_bannerURL)
 
-            webhookClient.send({
+        webhookClient.send({
             content: `<@&1282578310383145024>`,
             username: wh_username,
             avatarURL: wh_avatarURL,
@@ -184,9 +170,10 @@ async function repost(target, token, did) {
         console.log(`📌 Reposted from ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 
         return { message: 'Reposted successfully', data };
-    } catch (error) {
-        console.error('Error reposting:', error);
-        throw error;
+    } catch (err) {
+        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in repost ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
+        console.error('Error reposting:', err);
+        throw err;
     }
 }
 
@@ -205,9 +192,10 @@ async function checkIfReposted(target, token) {
 
         const { data } = await axios(config);
         return data.repostedBy.some(user => user.handle === process.env.BLUESKY_USERNAME);
-    } catch (error) {
-        console.error('Error checking repost status:', error);
-        throw error;
+    } catch (err) {
+        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in checkIfReposted ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
+        console.error('Error checking repost status:', err);
+        throw err
     }
 }
 
@@ -222,25 +210,21 @@ async function main() {
         if (now - lastHourReset >= 3600000) { // ⏰ 1 hour in milliseconds
             actionPoints = 0;
             lastHourReset = Date.now();
-            saveState({ actionPoints, lastHourReset });
+            saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
             console.log('🔄 Points reset to new time');
         }
 
         if (now - lastDailyReset >= 86400000) { // ⏰ 24 hours in milliseconds
             dailyRequestCount = 0;
             lastHourReset = Date.now();
-            saveState({ dailyRequestCount, lastDailyReset });
+            saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
             console.log('🔄 Daily request count reset');
         }
 
         const startTime = new Date().toLocaleTimeString();
         console.log(`⏰ Tick executed ${startTime}`);
-        let tcheck = token || ''
-        if (tcheck.length === 0) {
-            const { error } = await getAccessToken();
-            if (error === "RateLimitExceeded")
-                return;
-        }
+
+        await getAccessToken()
 
         // 📥 Fetch mentions and tags
         const { mentions } = await getMentions(token);
@@ -272,22 +256,15 @@ async function main() {
             await delay(delayTime); // ⏰ delay time
         }
     } catch (err) {
-        switch (err.error) {
-        case "ExpiredToken":
-            token = "";
-            did = "";
-            saveState({ token, did });
-            break;
-        case "RateLimitExceeded":
-            console.log(`[🔴 ratelimit-reset] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`);
-            break;
-        default:
-            console.error('Error:', err);
-            throw err;
-        }
+        if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in main] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
+        console.error('Error main:', err);
+        throw err
     }
 }
+// 30 minutos em milissegundos
+let intervalo = 30 * 60 * 1000;
 
+setInterval(changeToken, intervalo);
 module.exports = {
     main
 };
