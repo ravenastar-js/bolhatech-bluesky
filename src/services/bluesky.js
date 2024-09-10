@@ -2,10 +2,10 @@ require('../config/dotenv.js');
 const axios = require('axios');
 const fs = require('fs');
 const { EmbedBuilder, WebhookClient } = require('discord.js');
-const {
-    API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
-    cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL,
-    wh_avatarURL, wh_username
+const { 
+    API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION, 
+    cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL, 
+    wh_avatarURL, wh_username 
 } = require('../config/config');
 
 const stateFilePath = './state.json';
@@ -62,7 +62,7 @@ async function changeToken() {
             return;
         }
         console.log('🔄 changeToken updated');
-
+        
         const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
             identifier: process.env.BLUESKY_USERNAME,
             password: process.env.BLUESKY_PASSWORD
@@ -127,6 +127,35 @@ const createRepostData = (target, did) => ({
     },
 });
 
+function sendWebhookNotification(target, repostData) {
+    const t_uri = target.uri;
+    const post_id = t_uri.split('/').pop();
+    const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
+
+    let rtext = target.record?.text || "";
+    let desc_embed = rtext.length === 0 ? "" : ` \`\`\`\n${rtext}\n\`\`\` `;
+
+    const isoDate = target.record.createdAt;
+    const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
+
+    const WH_Embed = new EmbedBuilder()
+        .setColor(embed_color)
+        .setAuthor({
+            name: `${target.author.handle}`,
+            iconURL: `${target.author.avatar}`,
+            url: `https://bsky.app/profile/${target.author.handle}`
+        })
+        .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
+        .setImage(embed_bannerURL)
+
+    webhookClient.send({
+        content: `<@&1282578310383145024>`,
+        username: wh_username,
+        avatarURL: wh_avatarURL,
+        embeds: [WH_Embed],
+    });
+}
+
 async function repost(target, token, did) {
     try {
         if (!target.uri || !target.cid) {
@@ -156,34 +185,6 @@ async function repost(target, token, did) {
     }
 }
 
-function sendWebhookNotification(target, repostData) {
-    const t_uri = target.uri;
-    const post_id = t_uri.split('/').pop();
-    const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
-
-    let rtext = target.record?.text || "";
-    let desc_embed = rtext.length === 0 ? "" : ` \`\`\`\n${rtext}\n\`\`\` `;
-
-    const isoDate = target.record.createdAt;
-    const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
-
-    const WH_Embed = new EmbedBuilder()
-        .setColor(embed_color)
-        .setAuthor({
-            name: `${target.author.handle}`,
-            iconURL: `${target.author.avatar}`,
-            url: `https://bsky.app/profile/${target.author.handle}`
-        })
-        .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> PUBLICAÇÃO REPOSTADA por @${wh_username}`)
-        .setImage(embed_bannerURL);
-
-    webhookClient.send({
-        content: `<@&1282578310383145024>`,
-        username: wh_username,
-        avatarURL: wh_avatarURL,
-        embeds: [WH_Embed],
-    });
-}
 
 
 async function checkIfReposted(target, token) {
