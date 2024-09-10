@@ -71,7 +71,9 @@ async function getMentions(token) {
     } catch (err) {
         switch (err.error) {
         case "ExpiredToken":
-            await getAccessToken();
+            token = "";
+            did = "";
+            saveState({ token, did });
             break;
         case "RateLimitExceeded":
             console.log(`[🔴 ratelimit-reset in getMentions] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`);
@@ -100,7 +102,9 @@ async function getTags(token) {
     } catch (err) {
         switch (err.error) {
         case "ExpiredToken":
-            await getAccessToken();
+            token = "";
+            did = "";
+            saveState({ token, did });
             break;
         case "RateLimitExceeded":
             console.log(`[🔴 ratelimit-reset in getTags] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`);
@@ -267,7 +271,9 @@ async function main() {
     } catch (err) {
         switch (err.error) {
         case "ExpiredToken":
-            await getAccessToken();
+            token = "";
+            did = "";
+            saveState({ token, did });
             break;
         case "RateLimitExceeded":
             console.log(`[🔴 ratelimit-reset] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`);
