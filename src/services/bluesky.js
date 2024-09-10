@@ -247,6 +247,9 @@ async function main() {
             await delay(delayTime); // ⏰ delay time
         }
     } catch (err) {
+        if (err.error === "ExpiredToken") {
+         await getAccessToken()
+        }
         if (err.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset ] 🔗 https://hammertime.cyou?t=${err.headers['ratelimit-reset']}`)
         else console.error('Error:', err);
         throw err;
