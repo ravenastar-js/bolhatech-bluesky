@@ -55,6 +55,11 @@ async function getAccessToken() {
 }
 
 async function changeToken() {
+    try {
+    if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
+        console.log('⚠️ Daily request limit reached. Waiting...');
+        return;
+    }
     const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
         identifier: process.env.BLUESKY_USERNAME,
         password: process.env.BLUESKY_PASSWORD
@@ -65,6 +70,11 @@ async function changeToken() {
     did = data.did
 
     return saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did })
+} catch (err) {
+    if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") return console.log(`[ 🔴 ratelimit-reset in getAccessToken ] 🔗 https://hammertime.cyou?t=${err.response.headers['ratelimit-reset']}`);
+    console.error('Error changeToken:', err.message || err);
+    throw err;
+}
 }
 
 async function getMentions(token) {
