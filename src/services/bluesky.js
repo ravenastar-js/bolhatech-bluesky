@@ -135,6 +135,13 @@ const createRepostData = (target, did) => ({
     },
 });
 
+function limitarTexto(texto, limite = 1000) {
+        if (texto.length <= limite) {
+            return texto;
+        }
+        return texto.slice(0, limite) + "[...]";
+}
+
 // 🔔 Função para enviar notificação via webhook no Discord
 function sendWebhookNotification(target, repostData) {
     const t_uri = target.uri;
@@ -146,15 +153,9 @@ function sendWebhookNotification(target, repostData) {
 
     const isoDate = target.record.createdAt;
     const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
-    const embed_img = embed_bannerURL
 
-    const files = target.embed.images.length === 0 ? [] : target.embed.images.map(img => ({fullsize:img.fullsize , alt:img.alt}));
-    function limitarTexto(texto, limite = 1000) {
-        if (texto.length <= limite) {
-            return texto;
-        }
-        return texto.slice(0, limite) + "[...]";
-    }
+    const files = target.embed.images?.length === 0 ? [] : target.embed.images.map(img => ({fullsize:img.fullsize , alt:img.alt}));
+    
     let wh_files = [];
     if (files.length > 0) {
         wh_files = files.map((img, index) => ({
@@ -172,7 +173,7 @@ function sendWebhookNotification(target, repostData) {
             url: `https://bsky.app/profile/${target.author.handle}`
         })
         .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
-        .setImage(embed_img)
+        .setImage(embed_bannerURL)
 
     webhookClient.send({
         content: `<@&1282578310383145024>`,
