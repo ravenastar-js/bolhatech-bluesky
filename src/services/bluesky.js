@@ -154,16 +154,25 @@ function sendWebhookNotification(target, repostData) {
     const isoDate = target.record.createdAt;
     const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
 
-    const files = target.embed.images.length === 0 ? [] : target.embed.images.map(img => ({fullsize:img.fullsize , alt:img.alt}));
-    
+    const files = target.embed;
+
     let wh_files = [];
-    if (files.size > 0) {
-        wh_files = files.map((img, index) => ({
-            attachment: img.fullsize,
-            name: `${index + 1}.png`,
-            description: limitarTexto(img.alt)
-        }));
-    }
+
+if (files.images) {
+    wh_files = files.images.map((img, index) => ({
+        attachment: img.fullsize,
+        name: `${index + 1}.png`,
+        description: limitarTexto(img.alt)
+    }));
+}
+
+if (files.external) {
+    wh_files.push({
+        attachment: files.external.thumb,
+        name: "external.png",
+        description: limitarTexto(files.external.description)
+    });
+}
 
     const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
