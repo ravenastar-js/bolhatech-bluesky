@@ -158,7 +158,7 @@ function sendWebhookNotification(target, repostData) {
 
 let wh_files = [];
 
-if (files.images) {
+if (files?.images) {
     wh_files = files.images.map((img, index) => {
         let extension = "png"; // Default extension
         if (img.fullsize.includes(".gif")) {
@@ -175,7 +175,7 @@ if (files.images) {
     });
 }
 
-if (files.external) {
+if (files?.external) {
     let extension = "png"; // Default extension
     if (files.external.uri.includes(".gif")) {
         extension = "gif";
@@ -189,7 +189,7 @@ if (files.external) {
         description: limitarTexto(files.external.description)
     });
 }
-
+    
     const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
         .setAuthor({
