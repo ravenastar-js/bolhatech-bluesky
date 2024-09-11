@@ -3,10 +3,10 @@ require('../config/dotenv.js');
 const axios = require('axios');
 const fs = require('fs');
 const { EmbedBuilder, WebhookClient } = require('discord.js');
-const { 
-    API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION, 
-    cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL, 
-    wh_avatarURL, wh_username 
+const {
+    API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
+    cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL,
+    wh_avatarURL, wh_username
 } = require('../config/config');
 
 const stateFilePath = './state.json';
@@ -68,7 +68,7 @@ async function changeToken() {
             return;
         }
         console.log('🔄 token atualizado.');
-        
+
         const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
             identifier: process.env.BLUESKY_USERNAME,
             password: process.env.BLUESKY_PASSWORD
@@ -146,6 +146,23 @@ function sendWebhookNotification(target, repostData) {
 
     const isoDate = target.record.createdAt;
     const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
+    const embed_img = embed_bannerURL
+
+    const files = target.embed.images.length === 0 ? [] : target.embed.images.map(img => ({fullsize:img.fullsize , alt:img.alt}));
+    function limitarTexto(texto, limite = 1000) {
+        if (texto.length <= limite) {
+            return texto;
+        }
+        return texto.slice(0, limite) + "[...]";
+    }
+    let wh_files = [];
+    if (files.length > 0) {
+        wh_files = files.map((img, index) => ({
+            attachment: img.fullsize,
+            name: `${index + 1}.png`,
+            description: limitarTexto(img.alt)
+        }));
+    }
 
     const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
@@ -155,12 +172,13 @@ function sendWebhookNotification(target, repostData) {
             url: `https://bsky.app/profile/${target.author.handle}`
         })
         .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
-        .setImage(embed_bannerURL)
+        .setImage(embed_img)
 
     webhookClient.send({
         content: `<@&1282578310383145024>`,
         username: wh_username,
         avatarURL: wh_avatarURL,
+        files: wh_files,
         embeds: [WH_Embed],
     });
     console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
@@ -224,7 +242,7 @@ async function main() {
         resetCountersIfNeeded();
 
         const startTime = new Date().toLocaleTimeString();
-        console.log(`⏰ Tick executed ${startTime}`);
+        console.log(`⏰ CronJob executado em ${startTime}`);
 
         await getAccessToken();
 
