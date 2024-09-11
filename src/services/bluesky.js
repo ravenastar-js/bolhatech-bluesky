@@ -156,39 +156,32 @@ function sendWebhookNotification(target, repostData) {
 
     const files = target.embed;
 
-let wh_files = [];
+const wh_files = [];
+
+const getExtension = (url) => {
+    if (url.includes("@gif") || url.includes(".gif")) return "gif";
+    if (url.includes("@jpeg") || url.includes(".jpeg")) return "png";
+    return "png";
+};
+
+const createFileObject = (url, name, description) => ({
+    attachment: url,
+    name,
+    description: limitarTexto(description)
+});
 
 if (files?.images) {
-    wh_files = files.images.map((img, index) => {
-        let extension = "png"; // Default extension
-        if (img.fullsize.includes("@gif")) {
-            extension = "gif";
-        } else if (img.fullsize.includes("@jpeg")) {
-            extension = "png";
-        }
-
-        return {
-            attachment: img.fullsize,
-            name: `${index + 1}.${extension}`,
-            description: limitarTexto(img.alt)
-        };
+    files.images.forEach((img, index) => {
+        const extension = getExtension(img.fullsize);
+        wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
     });
 }
 
 if (files?.external) {
-    let extension = "png"; // Default extension
-    if (files.external.uri.includes(".gif")) {
-        extension = "gif";
-    }  else if (files.external.uri.includes(".jpeg")) {
-        extension = "png";
-    }
-
-    wh_files.push({
-        attachment: files.external.uri,
-        name: `external.${extension}`,
-        description: limitarTexto(files.external.description)
-    });
+    const extension = getExtension(files.external.uri);
+    wh_files.push(createFileObject(files.external.uri, `external.${extension}`, files.external.description));
 }
+
     
     const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
