@@ -161,9 +161,9 @@ let wh_files = [];
 if (files?.images) {
     wh_files = files.images.map((img, index) => {
         let extension = "png"; // Default extension
-        if (img.fullsize.includes(".gif")) {
+        if (img.fullsize.includes("@gif")) {
             extension = "gif";
-        } else if (img.fullsize.includes(".png")) {
+        } else if (img.fullsize.includes("@jpeg")) {
             extension = "png";
         }
 
@@ -179,7 +179,7 @@ if (files?.external) {
     let extension = "png"; // Default extension
     if (files.external.uri.includes(".gif")) {
         extension = "gif";
-    }  else if (files.external.uri.includes(".png")) {
+    }  else if (files.external.uri.includes(".jpeg")) {
         extension = "png";
     }
 
