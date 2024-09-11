@@ -157,7 +157,7 @@ function sendWebhookNotification(target, repostData) {
     const files = target.embed.images.length === 0 ? [] : target.embed.images.map(img => ({fullsize:img.fullsize , alt:img.alt}));
     
     let wh_files = [];
-    if (files?.length > 0) {
+    if (files.size > 0) {
         wh_files = files.map((img, index) => ({
             attachment: img.fullsize,
             name: `${index + 1}.png`,
