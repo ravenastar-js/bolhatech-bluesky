@@ -155,12 +155,10 @@ function sendWebhookNotification(target, repostData) {
     const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
 
     const files = target.embed;
-
-const wh_files = [];
+    const wh_files = [];
 
 const getExtension = (url) => {
-    if (url.includes("@gif") || url.includes(".gif")) return "gif";
-    if (url.includes("@jpeg") || url.includes(".jpeg")) return "png";
+    if (url.includes("@gif") || url.includes(".gif")) return "gif"; 
     return "png";
 };
 
@@ -170,6 +168,11 @@ const createFileObject = (url, name, description) => ({
     description: limitarTexto(description)
 });
 
+const isYouTubeUrl = (url) => {
+    const youtubeDomains = ["youtube.com", "youtu.be"];
+    return youtubeDomains.some(domain => url.includes(domain));
+};
+
 if (files?.images) {
     files.images.forEach((img, index) => {
         const extension = getExtension(img.fullsize);
@@ -177,11 +180,10 @@ if (files?.images) {
     });
 }
 
-if (files?.external) {
+if (files?.external && !isYouTubeUrl(files.external.uri)) {
     const extension = getExtension(files.external.uri);
     wh_files.push(createFileObject(files.external.uri, `external.${extension}`, files.external.description));
 }
-
     
     const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
