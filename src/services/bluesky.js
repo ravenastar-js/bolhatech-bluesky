@@ -156,20 +156,36 @@ function sendWebhookNotification(target, repostData) {
 
     const files = target.embed;
 
-    let wh_files = [];
+let wh_files = [];
 
 if (files.images) {
-    wh_files = files.images.map((img, index) => ({
-        attachment: img.fullsize,
-        name: `${index + 1}.png`,
-        description: limitarTexto(img.alt)
-    }));
+    wh_files = files.images.map((img, index) => {
+        let extension = "png"; // Default extension
+        if (img.fullsize.includes(".gif")) {
+            extension = "gif";
+        } else if (img.fullsize.includes(".png")) {
+            extension = "png";
+        }
+
+        return {
+            attachment: img.fullsize,
+            name: `${index + 1}.${extension}`,
+            description: limitarTexto(img.alt)
+        };
+    });
 }
 
 if (files.external) {
+    let extension = "png"; // Default extension
+    if (files.external.uri.includes(".gif")) {
+        extension = "gif";
+    }  else if (files.external.uri.includes(".png")) {
+        extension = "png";
+    }
+
     wh_files.push({
-        attachment: files.external.thumb,
-        name: "external.png",
+        attachment: files.external.uri,
+        name: `external.${extension}`,
         description: limitarTexto(files.external.description)
     });
 }
