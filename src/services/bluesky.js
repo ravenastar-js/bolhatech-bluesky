@@ -192,21 +192,19 @@ const processExternal = () => {
     let externalUrl = files?.external.uri;
     if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
     const extension = getExtension(externalUrl);
-    wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description))
-    // Tarefas específicas para arquivos externos
+    wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
 };
 
 const processImages = () => {
     files?.images.forEach((img, index) => {
         const extension = getExtension(img.fullsize);
-        wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt))
-        // Tarefas específicas para imagens
+        wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
     });
 };
 
-if (files?.images) {
+if (files?.images && files.images.length > 0) {
     processImages();
-} else if (files?.external && !isYouTubeUrl(files?.external.uri)) {
+} else if (files?.external && !isYouTubeUrl(files.external.uri)) {
     processExternal();
 }
 
