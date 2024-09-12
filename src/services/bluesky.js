@@ -88,7 +88,7 @@ async function getAccessToken() {
         dailyRequestCount += 3;
         did = data.did;
         
-        saveToken(data.accessJwt)
+        updateToken(data.accessJwt)
         saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
     } catch (err) {
         handleRateLimitError(err, 'getAccessToken');
