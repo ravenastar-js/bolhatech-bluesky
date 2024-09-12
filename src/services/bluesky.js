@@ -10,7 +10,10 @@ const {
 } = require('../config/config');
 
 
-const tokenState = new Map();
+// Usando um objeto para armazenar o token
+const tokenState = {
+    token: ""
+};
 
 // Função para carregar o estado inicial do token
 function loadToken() {
@@ -22,7 +25,7 @@ function loadToken() {
 // Função para salvar o token
 function saveToken(newToken) {
     if (newToken !== undefined) {
-        tokenState.set('token', newToken);
+        tokenState.token = newToken;
     }
 }
 
@@ -33,7 +36,7 @@ saveToken(initialTokenState.token);
 // Função para obter o token atual
 function getToken() {
     return {
-        token: tokenState.get('token'),
+        token: tokenState.token,
     };
 }
 
@@ -41,11 +44,6 @@ function getToken() {
 const updateToken = (newToken) => {
     saveToken(newToken);
 };
-
-// Exemplo de uso
-updateToken("novo token");
-
-
 
 const stateFilePath = './state.json';
 const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
