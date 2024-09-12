@@ -204,7 +204,7 @@ const processImages = () => {
 
 if (files?.images && files.images.length > 0) {
     processImages();
-} else if (files?.external && !isYouTubeUrl(files.external.uri)) {
+} else if (files?.external && !isYouTubeUrl(files.external.uri) && files.external.thumb) {
     processExternal();
 }
 
