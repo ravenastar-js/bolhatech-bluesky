@@ -202,9 +202,9 @@ const processImages = () => {
     });
 };
 
-if (files?.images && files.images.length > 0) {
+if (files?.$type === "app.bsky.embed.images#view") {
     processImages();
-} else if (files?.external && !isYouTubeUrl(files.external.uri) && files.external.thumb) {
+} else if (files?.$type === "app.bsky.embed.external#view" && !isYouTubeUrl(files.external.uri) && files.external.thumb) {
     processExternal();
 }
 
