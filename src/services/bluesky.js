@@ -9,6 +9,14 @@ const {
     wh_avatarURL, wh_username
 } = require('../config/config');
 
+// 🗝️ Cria um objeto para armazenar o token
+let tokenObject = { token: "" };
+
+// 🗝️ Função para definir o token em tokenObject
+function tokenSet(newToken) {
+    tokenObject.token = newToken;
+}
+
 const stateFilePath = './state.json';
 const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
 
@@ -34,7 +42,8 @@ function saveState(state) {
 }
 
 // 🔄 Carrega o estado inicial
-let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did } = loadState();
+let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did } = loadState();
+let { token } = tokenObject
 
 // 🔑 Função para obter o token de acesso
 async function getAccessToken() {
@@ -52,8 +61,8 @@ async function getAccessToken() {
         dailyRequestCount += 3;
         token = data.accessJwt;
         did = data.did;
-
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        tokenSet(data.accessJwt)
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
     } catch (err) {
         handleRateLimitError(err, 'getAccessToken');
     }
@@ -75,10 +84,10 @@ async function changeToken() {
         });
 
         dailyRequestCount += 3;
-        token = data.accessJwt;
         did = data.did;
 
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        tokenSet(data.accessJwt)
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
     } catch (err) {
         handleRateLimitError(err, 'changeToken');
     }
@@ -136,10 +145,10 @@ const createRepostData = (target, did) => ({
 });
 
 function limitarTexto(texto, limite = 1000) {
-        if (texto.length <= limite) {
-            return texto;
-        }
-        return texto.slice(0, limite) + "[...]";
+    if (texto.length <= limite) {
+        return texto;
+    }
+    return texto.slice(0, limite) + "[...]";
 }
 
 // 🔔 Função para enviar notificação via webhook no Discord
@@ -154,47 +163,47 @@ function sendWebhookNotification(target, repostData) {
     const isoDate = target.record.createdAt;
     const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
 
-const files = target.embed;
-const wh_files = [];
+    const files = target.embed;
+    const wh_files = [];
 
-const getExtension = (url) => {
-    if (url.includes("@gif") || url.includes(".gif")) return "gif"; 
-    return "png";
-};
+    const getExtension = (url) => {
+        if (url.includes("@gif") || url.includes(".gif")) return "gif";
+        return "png";
+    };
 
-const createFileObject = (url, name, description) => ({
-    attachment: url,
-    name,
-    description: limitarTexto(description)
-});
-
-const isYouTubeUrl = (url) => {
-    const youtubeDomains = ["youtube.com", "youtu.be"];
-    return youtubeDomains.some(domain => url.includes(domain));
-};
-
-const isImageUrl = (url) => {
-    const imageExtensions = [".png", ".jpeg", ".gif"];
-    return imageExtensions.some(ext => url.includes(ext));
-};
-
-if (files?.images) {
-    files.images.forEach((img, index) => {
-        const extension = getExtension(img.fullsize);
-        wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+    const createFileObject = (url, name, description) => ({
+        attachment: url,
+        name,
+        description: limitarTexto(description)
     });
-}
 
-if (files?.external && !isYouTubeUrl(files.external.uri)) {
-    let externalUrl = files.external.uri;
-    if (!isImageUrl(externalUrl)) {
-        externalUrl = files.external.thumb;
+    const isYouTubeUrl = (url) => {
+        const youtubeDomains = ["youtube.com", "youtu.be"];
+        return youtubeDomains.some(domain => url.includes(domain));
+    };
+
+    const isImageUrl = (url) => {
+        const imageExtensions = [".png", ".jpeg", ".gif"];
+        return imageExtensions.some(ext => url.includes(ext));
+    };
+
+    if (files?.images) {
+        files.images.forEach((img, index) => {
+            const extension = getExtension(img.fullsize);
+            wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+        });
     }
-    const extension = getExtension(externalUrl);
-    wh_files.push(createFileObject(externalUrl, `external.${extension}`, files.external.description));
-}
 
-    
+    if (files?.external && !isYouTubeUrl(files.external.uri)) {
+        let externalUrl = files.external.uri;
+        if (!isImageUrl(externalUrl)) {
+            externalUrl = files.external.thumb;
+        }
+        const extension = getExtension(externalUrl);
+        wh_files.push(createFileObject(externalUrl, `external.${extension}`, files.external.description));
+    }
+
+
     const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
         .setAuthor({
@@ -234,7 +243,7 @@ async function repost(target, token, did) {
         });
 
         actionPoints += 3;
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
 
         sendWebhookNotification(target, repostData);
 
@@ -307,14 +316,14 @@ function resetCountersIfNeeded() {
     if (now - lastHourReset >= 3600000) {
         actionPoints = 0;
         lastHourReset = Date.now();
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
         console.log('🔄 Pontos redefinidos para novo horário.');
     }
 
     if (now - lastDailyReset >= 86400000) {
         dailyRequestCount = 0;
         lastHourReset = Date.now();
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
         console.log('🔄 Redefinição da contagem de solicitações diárias.');
     }
 }
