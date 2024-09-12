@@ -65,7 +65,7 @@ function saveState(state) {
 
 // 🔄 Carrega o estado inicial
 let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did } = loadState();
-let token = getToken().token
+let { token } = getToken()
 
 // 🔑 Função para obter o token de acesso
 async function getAccessToken() {
