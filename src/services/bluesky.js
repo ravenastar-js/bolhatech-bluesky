@@ -60,6 +60,7 @@ async function getAccessToken() {
         dailyRequestCount += 3;
         token = data.accessJwt;
         did = data.did;
+        
         tokenSet(data.accessJwt)
         saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
     } catch (err) {
@@ -83,6 +84,7 @@ async function changeToken() {
         });
 
         dailyRequestCount += 3;
+        token = data.accessJwt;
         did = data.did;
 
         tokenSet(data.accessJwt)
