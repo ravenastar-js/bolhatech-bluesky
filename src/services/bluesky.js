@@ -9,6 +9,37 @@ const {
     wh_avatarURL, wh_username
 } = require('../config/config');
 
+
+const tokenState = new Map();
+
+function loadToken() {
+    return {
+        token: "",
+    };
+}
+
+function saveToken(newTokenState) {
+    if (newTokenState.token !== undefined) {
+        tokenState.set('token', newTokenState.token);
+    }
+}
+
+let initialTokenState = loadToken();
+saveToken(initialTokenState);
+
+function getToken() {
+    return {
+        token: tokenState.get('token'),
+    };
+}
+
+// Atualizando apenas o token
+const updateToken = (newToken) => {
+    saveToken({ token: newToken });
+};
+
+
+
 const stateFilePath = './state.json';
 const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
 
@@ -23,7 +54,6 @@ function loadState() {
         lastHourReset: Date.now(),
         dailyRequestCount: 0,
         lastDailyReset: Date.now(),
-        token: "",
         did: "",
     };
 }
@@ -34,7 +64,8 @@ function saveState(state) {
 }
 
 // 🔄 Carrega o estado inicial
-let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did } = loadState();
+let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did } = loadState();
+let token = getToken().token
 
 // 🔑 Função para obter o token de acesso
 async function getAccessToken() {
@@ -50,10 +81,10 @@ async function getAccessToken() {
         });
 
         dailyRequestCount += 3;
-        token = data.accessJwt;
         did = data.did;
-
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        
+        updateToken(data.accessJwt)
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
     } catch (err) {
         handleRateLimitError(err, 'getAccessToken');
     }
@@ -75,10 +106,10 @@ async function changeToken() {
         });
 
         dailyRequestCount += 3;
-        token = data.accessJwt;
         did = data.did;
-
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        
+        updateToken(data.accessJwt)
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
     } catch (err) {
         handleRateLimitError(err, 'changeToken');
     }
@@ -234,7 +265,7 @@ async function repost(target, token, did) {
         });
 
         actionPoints += 3;
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
 
         sendWebhookNotification(target, repostData);
 
@@ -307,14 +338,14 @@ function resetCountersIfNeeded() {
     if (now - lastHourReset >= 3600000) {
         actionPoints = 0;
         lastHourReset = Date.now();
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
         console.log('🔄 Pontos redefinidos para novo horário.');
     }
 
     if (now - lastDailyReset >= 86400000) {
         dailyRequestCount = 0;
         lastHourReset = Date.now();
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
         console.log('🔄 Redefinição da contagem de solicitações diárias.');
     }
 }
