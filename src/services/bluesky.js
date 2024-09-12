@@ -153,7 +153,7 @@ function limitarTexto(texto, limite = 1000) {
 }
 
 // 🔔 Função para enviar notificação via webhook no Discord
-function sendWebhookNotification(target, repostData) {
+async function sendWebhookNotification(target, repostData) {
     const t_uri = target.uri;
     const post_id = t_uri.split('/').pop();
     const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
@@ -165,7 +165,7 @@ function sendWebhookNotification(target, repostData) {
     const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
 
     const files = target.embed;
-    const wh_files = [];
+    let wh_files = [];
 
     const getExtension = (url) => {
         if (url.includes("@gif") || url.includes(".gif")) return "gif";
@@ -188,27 +188,25 @@ function sendWebhookNotification(target, repostData) {
         return imageExtensions.some(ext => url.includes(ext));
     };
 
-    if (files && files.images) {
-        if (Array.isArray(files.images)) {
-            files.images.forEach((img, index) => {
-                const extension = getExtension(img.fullsize);
-                wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
-            });
-        }
-    }
+    const processExternal = () => {
+        let externalUrl = files?.external.uri;
+        if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
+        const extension = getExtension(externalUrl);
+        wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description))
+        // Tarefas específicas para arquivos externos
+    };
 
-    if (files && files.external && !isYouTubeUrl(files.external.uri)) {
-        if (Array.isArray(files.external)) {
-            let externalUrl = files.external.uri;
-            if (!isImageUrl(externalUrl)) {
-                externalUrl = files.external.thumb;
-            }
-            const extension = getExtension(externalUrl);
-            wh_files.push(createFileObject(externalUrl, `external.${extension}`, files.external.description));
-        }
-    }
+    const processImages = () => {
+        files?.images.forEach((img, index) => {
+            const extension = getExtension(img.fullsize);
+            wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt))
+            // Tarefas específicas para imagens
+        });
+    };
 
+    files?.images ? processImages() : files?.external && !isYouTubeUrl(files?.external.uri) ? processExternal() : wh_files 
 
+ 
     const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
         .setAuthor({
