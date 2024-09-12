@@ -9,15 +9,11 @@ const {
     wh_avatarURL, wh_username
 } = require('../config/config');
 
-const stateFilePath = './state.json';
 const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
 
-// 💾 Função para carregar o estado do arquivo JSON
+const state = new Set();
+
 function loadState() {
-    if (fs.existsSync(stateFilePath)) {
-        const rawData = fs.readFileSync(stateFilePath);
-        return JSON.parse(rawData);
-    }
     return {
         actionPoints: 0,
         lastHourReset: Date.now(),
@@ -28,19 +24,28 @@ function loadState() {
     };
 }
 
-// 💾 Função para salvar o estado no arquivo JSON
-function saveState(state) {
-    fs.writeFileSync(stateFilePath, JSON.stringify(state));
+function saveState(newState) {
+    newState.forEach((value, key) => {
+        state.delete(key);
+        state.add({ [key]: value });
+    });
 }
 
-// 🔄 Carrega o estado inicial
 let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did } = loadState();
 
-// 🔑 Função para obter o token de acesso
+function getState() {
+    const stateObj = {};
+    state.forEach(item => Object.assign(stateObj, item));
+    return stateObj;
+}
+
+
+// 🔄 Função para trocar o token de acesso
 async function getAccessToken() {
     try {
-        if (token?.length > 0) return;
-        if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
+        const currentState = getState();
+        if (currentState.token?.length > 0) return;
+        if (currentState.dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
             console.log('⚠️ Limite diário de solicitações atingido. Aguardando...');
             return;
         }
@@ -49,21 +54,20 @@ async function getAccessToken() {
             password: process.env.BLUESKY_PASSWORD
         });
 
-        dailyRequestCount += 3;
-        token = data.accessJwt;
-        did = data.did;
+        currentState.dailyRequestCount += 3;
+        currentState.token = data.accessJwt;
+        currentState.did = data.did;
 
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        saveState(currentState);
     } catch (err) {
         handleRateLimitError(err, 'getAccessToken');
     }
 }
 
-
-// 🔄 Função para trocar o token de acesso
 async function changeToken() {
     try {
-        if (dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
+        const currentState = getState();
+        if (currentState.dailyRequestCount + 3 > MAX_REQUESTS_PER_EXECUTION) {
             console.log('⚠️ Limite diário de solicitações atingido. Aguardando...');
             return;
         }
@@ -74,15 +78,16 @@ async function changeToken() {
             password: process.env.BLUESKY_PASSWORD
         });
 
-        dailyRequestCount += 3;
-        token = data.accessJwt;
-        did = data.did;
+        currentState.dailyRequestCount += 3;
+        currentState.token = data.accessJwt;
+        currentState.did = data.did;
 
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        saveState(currentState);
     } catch (err) {
         handleRateLimitError(err, 'changeToken');
     }
 }
+
 
 // 🚫 Função para lidar com erros de limite de taxa
 function handleRateLimitError(err, functionName) {
@@ -223,7 +228,8 @@ async function repost(target, token, did) {
             return;
         }
 
-        if (actionPoints + 3 > MAX_POINTS_PER_HOUR) {
+        const currentState = getState();
+        if (currentState.actionPoints + 3 > MAX_POINTS_PER_HOUR) {
             console.log('⚠️ Limite de pontos por hora atingido. Aguardando...');
             return;
         }
@@ -233,8 +239,8 @@ async function repost(target, token, did) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        actionPoints += 3;
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+        currentState.actionPoints += 3;
+        saveState(currentState);
 
         sendWebhookNotification(target, repostData);
 
@@ -294,6 +300,7 @@ async function main() {
     }
 }
 
+
 // ✅ Função para validar variáveis de ambiente
 function validateEnvVariables() {
     if (!process.env.BLUESKY_USERNAME || !process.env.BLUESKY_PASSWORD) {
@@ -304,21 +311,21 @@ function validateEnvVariables() {
 // 🔄 Função para resetar contadores se necessário
 function resetCountersIfNeeded() {
     const now = Date.now();
-    if (now - lastHourReset >= 3600000) {
-        actionPoints = 0;
-        lastHourReset = Date.now();
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+    const currentState = getState();
+    if (now - currentState.lastHourReset >= 3600000) {
+        currentState.actionPoints = 0;
+        currentState.lastHourReset = Date.now();
+        saveState(currentState);
         console.log('🔄 Pontos redefinidos para novo horário.');
     }
 
-    if (now - lastDailyReset >= 86400000) {
-        dailyRequestCount = 0;
-        lastHourReset = Date.now();
-        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, token, did });
+    if (now - currentState.lastDailyReset >= 86400000) {
+        currentState.dailyRequestCount = 0;
+        currentState.lastHourReset = Date.now();
+        saveState(currentState);
         console.log('🔄 Redefinição da contagem de solicitações diárias.');
     }
 }
-
 // 🔍 Função para filtrar publicações não repostadas
 async function filterUnrepostedPosts(allPosts, token) {
     const unrepostedPosts = [];
@@ -342,6 +349,7 @@ async function repostUnrepostedPosts(unrepostedPosts, token, did) {
         await delay(delayTime);
     }
 }
+
 
 // ⏰ Configura intervalo para trocar o token periodicamente
 let intervalo = 30 * 60 * 1000;
