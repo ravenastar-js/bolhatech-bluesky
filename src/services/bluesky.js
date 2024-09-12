@@ -165,47 +165,52 @@ async function sendWebhookNotification(target, repostData) {
     const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
 
     const files = target.embed;
-    let wh_files = [];
+let wh_files = [];
 
-    const getExtension = (url) => {
-        if (url.includes("@gif") || url.includes(".gif")) return "gif";
-        return "png";
-    };
+const getExtension = (url) => {
+    if (url.includes("@gif") || url.includes(".gif")) return "gif";
+    return "png";
+};
 
-    const createFileObject = (url, name, description) => ({
-        attachment: url,
-        name,
-        description: limitarTexto(description)
+const createFileObject = (url, name, description) => ({
+    attachment: url,
+    name,
+    description: limitarTexto(description)
+});
+
+const isYouTubeUrl = (url) => {
+    const youtubeDomains = ["youtube.com", "youtu.be"];
+    return youtubeDomains.some(domain => url.includes(domain));
+};
+
+const isImageUrl = (url) => {
+    const imageExtensions = [".png", ".jpeg", ".gif"];
+    return imageExtensions.some(ext => url.includes(ext));
+};
+
+const processExternal = () => {
+    let externalUrl = files?.external.uri;
+    if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
+    const extension = getExtension(externalUrl);
+    wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description))
+    // Tarefas específicas para arquivos externos
+};
+
+const processImages = () => {
+    files?.images.forEach((img, index) => {
+        const extension = getExtension(img.fullsize);
+        wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt))
+        // Tarefas específicas para imagens
     });
+};
 
-    const isYouTubeUrl = (url) => {
-        const youtubeDomains = ["youtube.com", "youtu.be"];
-        return youtubeDomains.some(domain => url.includes(domain));
-    };
+if (files?.images) {
+    processImages();
+} else if (files?.external && !isYouTubeUrl(files?.external.uri)) {
+    processExternal();
+}
 
-    const isImageUrl = (url) => {
-        const imageExtensions = [".png", ".jpeg", ".gif"];
-        return imageExtensions.some(ext => url.includes(ext));
-    };
-
-    const processExternal = () => {
-        let externalUrl = files?.external.uri;
-        if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
-        const extension = getExtension(externalUrl);
-        wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description))
-        // Tarefas específicas para arquivos externos
-    };
-
-    const processImages = () => {
-        files?.images.forEach((img, index) => {
-            const extension = getExtension(img.fullsize);
-            wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt))
-            // Tarefas específicas para imagens
-        });
-    };
-
-    files?.images ? processImages() : files?.external && !isYouTubeUrl(files?.external.uri) ? processExternal() : wh_files 
-
+wh_files;
  
     const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
