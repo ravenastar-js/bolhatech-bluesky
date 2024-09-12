@@ -12,31 +12,38 @@ const {
 
 const tokenState = new Map();
 
+// Função para carregar o estado inicial do token
 function loadToken() {
     return {
         token: "",
     };
 }
 
-function saveToken(newTokenState) {
-    if (newTokenState.token !== undefined) {
-        tokenState.set('token', newTokenState.token);
+// Função para salvar o token
+function saveToken(newToken) {
+    if (newToken !== undefined) {
+        tokenState.set('token', newToken);
     }
 }
 
+// Inicializando o estado do token
 let initialTokenState = loadToken();
-saveToken(initialTokenState);
+saveToken(initialTokenState.token);
 
+// Função para obter o token atual
 function getToken() {
     return {
         token: tokenState.get('token'),
     };
 }
 
-// Atualizando apenas o token
+// Função para atualizar o token
 const updateToken = (newToken) => {
-    saveToken({ token: newToken });
+    saveToken(newToken);
 };
+
+// Exemplo de uso
+updateToken("novo token");
 
 
 
@@ -83,7 +90,7 @@ async function getAccessToken() {
         dailyRequestCount += 3;
         did = data.did;
         
-        updateToken(data.accessJwt)
+        saveToken(data.accessJwt)
         saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
     } catch (err) {
         handleRateLimitError(err, 'getAccessToken');
