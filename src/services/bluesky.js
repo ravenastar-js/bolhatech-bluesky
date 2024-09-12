@@ -154,8 +154,8 @@ function sendWebhookNotification(target, repostData) {
     const isoDate = target.record.createdAt;
     const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
 
-    const files = target.embed;
-    const wh_files = [];
+const files = target.embed;
+const wh_files = [];
 
 const getExtension = (url) => {
     if (url.includes("@gif") || url.includes(".gif")) return "gif"; 
@@ -173,6 +173,11 @@ const isYouTubeUrl = (url) => {
     return youtubeDomains.some(domain => url.includes(domain));
 };
 
+const isImageUrl = (url) => {
+    const imageExtensions = [".png", ".jpeg", ".gif"];
+    return imageExtensions.some(ext => url.includes(ext));
+};
+
 if (files?.images) {
     files.images.forEach((img, index) => {
         const extension = getExtension(img.fullsize);
@@ -181,9 +186,14 @@ if (files?.images) {
 }
 
 if (files?.external && !isYouTubeUrl(files.external.uri)) {
-    const extension = getExtension(files.external.uri);
-    wh_files.push(createFileObject(files.external.uri, `external.${extension}`, files.external.description));
+    let externalUrl = files.external.uri;
+    if (!isImageUrl(externalUrl)) {
+        externalUrl = files.external.thumb;
+    }
+    const extension = getExtension(externalUrl);
+    wh_files.push(createFileObject(externalUrl, `external.${extension}`, files.external.description));
 }
+
     
     const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
