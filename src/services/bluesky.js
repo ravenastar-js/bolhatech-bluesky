@@ -31,7 +31,6 @@ function loadState() {
         lastHourReset: Date.now(),
         dailyRequestCount: 0,
         lastDailyReset: Date.now(),
-        token: "",
         did: "",
     };
 }
