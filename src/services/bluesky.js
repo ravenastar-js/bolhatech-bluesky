@@ -60,7 +60,7 @@ async function getAccessToken() {
         dailyRequestCount += 3;
         token = data.accessJwt;
         did = data.did;
-        
+
         tokenSet(data.accessJwt)
         saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
     } catch (err) {
@@ -188,20 +188,24 @@ function sendWebhookNotification(target, repostData) {
         return imageExtensions.some(ext => url.includes(ext));
     };
 
-    if (files?.images) {
-        files.images.forEach((img, index) => {
-            const extension = getExtension(img.fullsize);
-            wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
-        });
+    if (files && files.images) {
+        if (Array.isArray(files.images)) {
+            files.images.forEach((img, index) => {
+                const extension = getExtension(img.fullsize);
+                wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+            });
+        }
     }
 
-    if (files?.external && !isYouTubeUrl(files.external.uri)) {
-        let externalUrl = files.external.uri;
-        if (!isImageUrl(externalUrl)) {
-            externalUrl = files.external.thumb;
+    if (files && files.external && !isYouTubeUrl(files.external.uri)) {
+        if (Array.isArray(files.external)) {
+            let externalUrl = files.external.uri;
+            if (!isImageUrl(externalUrl)) {
+                externalUrl = files.external.thumb;
+            }
+            const extension = getExtension(externalUrl);
+            wh_files.push(createFileObject(externalUrl, `external.${extension}`, files.external.description));
         }
-        const extension = getExtension(externalUrl);
-        wh_files.push(createFileObject(externalUrl, `external.${extension}`, files.external.description));
     }
 
 
