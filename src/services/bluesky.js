@@ -225,14 +225,7 @@ const WH_Embed = new EmbedBuilder()
             files: wh_files,
             embeds: [WH_Embed],
         });
-    } else {
-        webhookClient.send({
-            content: `<@&1282578310383145024>`,
-            username: wh_username,
-            avatarURL: wh_avatarURL,
-            embeds: [WH_Embed],
-        });
-    }
+    } 
     
     console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 }
