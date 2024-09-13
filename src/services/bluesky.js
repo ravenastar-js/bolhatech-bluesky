@@ -187,22 +187,8 @@ const isImageUrl = (url) => {
     const imageExtensions = [".png", ".jpeg", ".gif"];
     return imageExtensions.some(ext => url.includes(ext));
 };
-
-if (files?.$type === "app.bsky.embed.images#view") {
-    files?.images.forEach((img, index) => {
-        const extension = getExtension(img.fullsize);
-        wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
-    });
-} 
-
-if (files?.$type === "app.bsky.embed.external#view") {
-    let externalUrl = files?.external.uri;
-    if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
-    const extension = getExtension(externalUrl);
-    wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
-}
- 
-    const WH_Embed = new EmbedBuilder()
+    
+const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
         .setAuthor({
             name: `${target.author.handle}`,
@@ -212,13 +198,30 @@ if (files?.$type === "app.bsky.embed.external#view") {
         .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
         .setImage(embed_bannerURL)
 
-    webhookClient.send({
+     const WH_SEND =  webhookClient.send({
         content: `<@&1282578310383145024>`,
         username: wh_username,
         avatarURL: wh_avatarURL,
         files: wh_files,
         embeds: [WH_Embed],
     });
+    
+if (files?.$type === "app.bsky.embed.images#view") {
+    files?.images.forEach((img, index) => {
+        const extension = getExtension(img.fullsize);
+        wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+    });
+       return WH_SEND
+} 
+
+if (files?.$type === "app.bsky.embed.external#view") {
+    let externalUrl = files?.external.uri;
+    if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
+    const extension = getExtension(externalUrl);
+    wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
+    return WH_SEND
+}
+
     console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 }
 
