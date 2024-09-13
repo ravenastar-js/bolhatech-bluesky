@@ -200,7 +200,12 @@ const WH_Embed = new EmbedBuilder()
 
       
     const processFiles = (files) => {
-    if (files?.$type.includes("images#view")) {
+   if (files?.$type.includes("images#view") && files?.$type.includes("external#view")) {
+        files.images.forEach((img, index) => {
+            const extension = getExtension(img.fullsize);
+            wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+        });
+    } else if (files?.$type.includes("images#view")) {
         files.images.forEach((img, index) => {
             const extension = getExtension(img.fullsize);
             wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
