@@ -207,19 +207,30 @@ async function sendWebhookNotification(target, repostData) {
     // ⚙️ Configura o caminho do FFmpeg
     ffmpeg.setFfmpegPath(pathToFfmpeg);
 
+    // 🕒 Função para converter bytes em um formato legível
+    function niceBytes(x) {
+        const units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        let l = 0, n = parseInt(x, 10) || 0;
+        while (n >= 1024 && ++l) {
+            n = n / 1024;
+        }
+        return (n.toFixed(n < 10 && l > 0 ? 1 : 0) + ' ' + units[l]);
+    }
+
     // 🔍 Função para verificar a quantidade de RAM disponível
     const checkAvailableHeapMemory = () => {
         const memoryUsage = process.memoryUsage();
-        const heapTotalInMB = memoryUsage.heapTotal / 1024 / 1024;
-        const heapUsedInMB = memoryUsage.heapUsed / 1024 / 1024;
-        const heapFreeInMB = heapTotalInMB - heapUsedInMB;
+        const heapTotal = memoryUsage.heapTotal;
+        const heapUsed = memoryUsage.heapUsed;
+        const heapFree = heapTotal - heapUsed;
 
-        console.log(`Total Heap Memory: ${heapTotalInMB.toFixed(2)} MB`);
-        console.log(`Used Heap Memory: ${heapUsedInMB.toFixed(2)} MB`);
-        console.log(`Free Heap Memory: ${heapFreeInMB.toFixed(2)} MB`);
+        console.log(`Total Heap Memory: ${niceBytes(heapTotal)}`);
+        console.log(`Used Heap Memory: ${niceBytes(heapUsed)}`);
+        console.log(`Free Heap Memory: ${niceBytes(heapFree)}`);
 
-        return heapFreeInMB;
+        return heapFree / 1024 / 1024; // Retorna a memória livre em MB
     };
+
 
     // 🎥 Função para baixar e converter o vídeo
     const downloadAndConvertVideo = async (url, outputPath) => {
