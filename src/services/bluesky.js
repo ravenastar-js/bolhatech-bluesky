@@ -253,25 +253,26 @@ async function sendWebhookNotification(target, repostData) {
     try {
         // 🚀 Processa os arquivos embutidos
         await processFiles(files);
-
-        // 📤 Envia o webhook com os arquivos e o embed
-        await webhookClient.send({
-            content: `<@&1282578310383145024>`,
-            username: wh_username,
-            avatarURL: wh_avatarURL,
-            files: wh_files,
-            embeds: [WH_Embed],
-        });
-
-        // 🗑️ Opcional: Remove o arquivo após o envio
-        wh_files.forEach(file => {
-            if (fs.existsSync(file.attachment)) {
-                fs.unlinkSync(file.attachment);
-            }
-        });
     } catch (error) {
         console.error('❌ Erro ao processar e enviar o vídeo:', error);
     }
+    
+    // 📤 Envia o webhook com os arquivos e o embed
+    await webhookClient.send({
+        content: `<@&1282578310383145024>`,
+        username: wh_username,
+        avatarURL: wh_avatarURL,
+        files: wh_files,
+        embeds: [WH_Embed],
+    });
+
+    // 🗑️ Opcional: Remove o arquivo após o envio
+    wh_files.forEach(file => {
+        if (fs.existsSync(file.attachment)) {
+            fs.unlinkSync(file.attachment);
+        }
+    });
+
 
     console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 }
