@@ -4,7 +4,6 @@ const axios = require('axios');
 const ffmpeg = require('fluent-ffmpeg');
 const pathToFfmpeg = require('ffmpeg-static');
 const fs = require('fs');
-const { exec } = require('child_process');
 const path = require('path');
 const { EmbedBuilder, WebhookClient } = require('discord.js');
 const {
@@ -208,246 +207,209 @@ async function sendWebhookNotification(target, repostData) {
     // ⚙️ Configura o caminho do FFmpeg
     ffmpeg.setFfmpegPath(pathToFfmpeg);
 
-
-    // 📏 Função para converter bytes em um formato legível
-    function niceBytes(x) {
-        const units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        let l = 0, n = parseInt(x, 10) || 0;
-        while (n >= 1024 && ++l) {
-            n = n / 1024;
-        }
-        return (n.toFixed(n < 10 && l > 0 ? 1 : 0) + ' ' + units[l]);
-    }
-
-    // 🧠 Função para verificar a memória disponível no Docker
-    const checkDockerMemory = () => {
+    // 🎥 Função para download e conversão de vídeo
+    const downloadAndConvertVideo = async (url, outputPath) => {
+        console.log(`🎥 Iniciando download e conversão do vídeo: ${url}`);
         return new Promise((resolve, reject) => {
-            exec('docker stats --no-stream --format "{{.MemUsage}}"', (error, stdout, stderr) => {
-                if (error) {
-                    reject(`Erro ao executar o comando: ${stderr}`);
-                } else {
-                    const memoryUsage = stdout.trim().split('/');
-                    const usedMemory = parseFloat(memoryUsage[0].replace(/[^\d.]/g, ''));
-                    const totalMemory = parseFloat(memoryUsage[1].replace(/[^\d.]/g, ''));
-                    const freeMemory = totalMemory - usedMemory;
-                    resolve({ usedMemory, totalMemory, freeMemory });
-                }
-            });
+            ffmpeg(url)
+                .output(outputPath)
+                .addOption('-max_muxing_queue_size', '1024')
+                .addOption('-bufsize', '64M')
+                .on('start', () => {
+                    console.log('🚀 Conversão iniciada...');
+                })
+                .on('end', () => {
+                    console.log('🎉 Conversão concluída!');
+                    resolve();
+                })
+                .on('error', (err) => {
+                    console.error('⚠️ Erro durante a conversão:', err);
+                    reject(err);
+                })
+                .run();
         });
     };
 
-    // 🎥 Função para download e conversão de vídeo
-    const downloadAndConvertVideo = async (url, outputPath) => {
-            const { usedMemory, totalMemory, freeMemory } = await checkDockerMemory();
-            console.log(`🧠 Memória usada: ${niceBytes(usedMemory * 1024 * 1024)}`);
-            console.log(`💾 Memória total: ${niceBytes(totalMemory * 1024 * 1024)}`);
-            console.log(`📉 Memória livre: ${niceBytes(freeMemory * 1024 * 1024)}`);
-
-            const requiredHeapMemoryInMB = 500; // Defina a quantidade de memória heap necessária para a conversão
-
-            // Verifica se há memória suficiente
-            if (freeMemory < requiredHeapMemoryInMB) {
-                throw new Error('❗ Memória heap insuficiente para processar o vídeo.');
-            }
-            console.log(`🎥 Iniciando download e conversão do vídeo: ${url}`);
-            return new Promise((resolve, reject) => {
-                ffmpeg(url)
-                    .output(outputPath)
-                    .on('start', () => {
-                        console.log('🚀 Conversão iniciada...');
-                    })
-                    .on('end', () => {
-                        console.log('🎉 Conversão concluída!');
-                        resolve();
-                    })
-                    .on('error', (err) => {
-                        console.error('⚠️ Erro durante a conversão:', err);
-                        reject(err);
-                    })
-                    .run();
+    // 📂 Função para processar os arquivos embutidos
+    const processFiles = async (files) => {
+        if (files?.$type.includes("images#view")) {
+            files.images.forEach((img, index) => {
+                const extension = getExtension(img.fullsize);
+                wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
             });
-        };
+        }
+        if (files?.$type.includes("external#view")) {
+            let externalUrl = files.external.uri;
+            if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
+            const extension = getExtension(externalUrl);
+            wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
+        }
+        if (files?.$type.includes("video#view")) {
+            const video = files;
+            const outputFilePath = path.join(__dirname, 'output.mp4');
+            await downloadAndConvertVideo(video.playlist, outputFilePath);
+            wh_files.push(createFileObject(outputFilePath, `video.mp4`, video.alt));
+        }
+    };
 
-        // 📂 Função para processar os arquivos embutidos
-        const processFiles = async (files) => {
-            if (files?.$type.includes("images#view")) {
-                files.images.forEach((img, index) => {
-                    const extension = getExtension(img.fullsize);
-                    wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
-                });
-            }
-            if (files?.$type.includes("external#view")) {
-                let externalUrl = files.external.uri;
-                if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
-                const extension = getExtension(externalUrl);
-                wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
-            }
-            if (files?.$type.includes("video#view")) {
-                const video = files;
-                const outputFilePath = path.join(__dirname, 'output.mp4');
-                await downloadAndConvertVideo(video.playlist, outputFilePath);
-                wh_files.push(createFileObject(outputFilePath, `video.mp4`, video.alt));
-            }
-        };
+    try {
+        // 🚀 Processa os arquivos embutidos
+        await processFiles(files);
+    } catch (error) {
+        console.error('⚠️ Erro ao processar e enviar o vídeo:', error);
+    }
 
-        try {
-            // 🚀 Processa os arquivos embutidos
-            await processFiles(files);
-        } catch (error) {
-            console.error('⚠️ Erro ao processar e enviar o vídeo:', error);
+    // 📤 Envia o webhook com os arquivos e o embed
+    await webhookClient.send({
+        content: `<@&1282578310383145024>`,
+        username: wh_username,
+        avatarURL: wh_avatarURL,
+        files: wh_files,
+        embeds: [WH_Embed],
+    });
+
+    // 🗑️ Opcional: Remove o arquivo após o envio
+    wh_files.forEach(file => {
+        if (fs.existsSync(file.attachment)) {
+            fs.unlinkSync(file.attachment);
+        }
+    });
+
+
+    console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
+}
+
+// 🔄 Função para repostar uma publicação
+async function repost(target, token, did) {
+    try {
+        if (!target.uri || !target.cid) {
+            console.error('🎯 Alvo inválido para repostagem');
+            return;
         }
 
-        // 📤 Envia o webhook com os arquivos e o embed
-        await webhookClient.send({
-            content: `<@&1282578310383145024>`,
-            username: wh_username,
-            avatarURL: wh_avatarURL,
-            files: wh_files,
-            embeds: [WH_Embed],
+        if (actionPoints + 3 > MAX_POINTS_PER_HOUR) {
+            console.log('⚠️ Limite de pontos por hora atingido. Aguardando...');
+            return;
+        }
+
+        const repostData = createRepostData(target, did);
+        const { data } = await axios.post(`${API_URL}/com.atproto.repo.createRecord`, repostData, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        // 🗑️ Opcional: Remove o arquivo após o envio
-        wh_files.forEach(file => {
-            if (fs.existsSync(file.attachment)) {
-                fs.unlinkSync(file.attachment);
+        actionPoints += 3;
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
+
+        sendWebhookNotification(target, repostData);
+
+        return { message: 'Reposted successfully', data };
+    } catch (err) {
+        handleRateLimitError(err, 'repost');
+    }
+}
+
+// 🔍 Função para verificar se uma publicação já foi repostada
+async function checkIfReposted(target, token) {
+    try {
+        const config = {
+            method: 'get',
+            maxBodyLength: Infinity,
+            url: `https://public.api.bsky.app/xrpc/app.bsky.feed.getRepostedBy?uri=${target.uri}`,
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
             }
-        });
+        };
 
-
-        console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
+        const { data } = await axios(config);
+        return data.repostedBy.some(user => user.handle === process.env.BLUESKY_USERNAME);
+    } catch (err) {
+        handleRateLimitError(err, 'checkIfReposted');
     }
-
-    // 🔄 Função para repostar uma publicação
-    async function repost(target, token, did) {
-        try {
-            if (!target.uri || !target.cid) {
-                console.error('🎯 Alvo inválido para repostagem');
-                return;
-            }
-
-            if (actionPoints + 3 > MAX_POINTS_PER_HOUR) {
-                console.log('⚠️ Limite de pontos por hora atingido. Aguardando...');
-                return;
-            }
-
-            const repostData = createRepostData(target, did);
-            const { data } = await axios.post(`${API_URL}/com.atproto.repo.createRecord`, repostData, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            actionPoints += 3;
-            saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
-
-            sendWebhookNotification(target, repostData);
-
-            return { message: 'Reposted successfully', data };
-        } catch (err) {
-            handleRateLimitError(err, 'repost');
-        }
-    }
-
-    // 🔍 Função para verificar se uma publicação já foi repostada
-    async function checkIfReposted(target, token) {
-        try {
-            const config = {
-                method: 'get',
-                maxBodyLength: Infinity,
-                url: `https://public.api.bsky.app/xrpc/app.bsky.feed.getRepostedBy?uri=${target.uri}`,
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            };
-
-            const { data } = await axios(config);
-            return data.repostedBy.some(user => user.handle === process.env.BLUESKY_USERNAME);
-        } catch (err) {
-            handleRateLimitError(err, 'checkIfReposted');
-        }
-    }
+}
 
 
-    // 🏁 Função principal que coordena as operações
-    async function main() {
-        try {
-            validateEnvVariables();
+// 🏁 Função principal que coordena as operações
+async function main() {
+    try {
+        validateEnvVariables();
 
-            resetCountersIfNeeded();
+        resetCountersIfNeeded();
 
-            const startTime = new Date().toLocaleTimeString();
-            console.log(`⏰ CronJob executado em ${startTime}`);
+        const startTime = new Date().toLocaleTimeString();
+        console.log(`⏰ CronJob executado em ${startTime}`);
 
-            await getAccessToken();
+        await getAccessToken();
 
-            const { mentions } = await getMentions(token);
-            const { tags } = await getTags(token);
+        const { mentions } = await getMentions(token);
+        const { tags } = await getTags(token);
 
-            const allPosts = [...mentions, ...tags];
-            const unrepostedPosts = await filterUnrepostedPosts(allPosts, token);
+        const allPosts = [...mentions, ...tags];
+        const unrepostedPosts = await filterUnrepostedPosts(allPosts, token);
 
-            if (unrepostedPosts.length === 0) {
-                console.log('══════✮❁•° 🦋 °•❁✮══════');
-                return;
-            }
-
-            await repostUnrepostedPosts(unrepostedPosts, token, did);
-        } catch (err) {
-            handleRateLimitError(err, 'main');
-        }
-    }
-
-    // ✅ Função para validar variáveis de ambiente
-    function validateEnvVariables() {
-        if (!process.env.BLUESKY_USERNAME || !process.env.BLUESKY_PASSWORD) {
-            throw new Error('Missing BLUESKY_USERNAME or BLUESKY_PASSWORD in environment variables');
-        }
-    }
-
-    // 🔄 Função para resetar contadores se necessário
-    function resetCountersIfNeeded() {
-        const now = Date.now();
-        if (now - lastHourReset >= 3600000) {
-            actionPoints = 0;
-            lastHourReset = Date.now();
-            saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
-            console.log('🔄 Pontos redefinidos para novo horário.');
+        if (unrepostedPosts.length === 0) {
+            console.log('══════✮❁•° 🦋 °•❁✮══════');
+            return;
         }
 
-        if (now - lastDailyReset >= 86400000) {
-            dailyRequestCount = 0;
-            lastHourReset = Date.now();
-            saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
-            console.log('🔄 Redefinição da contagem de solicitações diárias.');
-        }
+        await repostUnrepostedPosts(unrepostedPosts, token, did);
+    } catch (err) {
+        handleRateLimitError(err, 'main');
+    }
+}
+
+// ✅ Função para validar variáveis de ambiente
+function validateEnvVariables() {
+    if (!process.env.BLUESKY_USERNAME || !process.env.BLUESKY_PASSWORD) {
+        throw new Error('Missing BLUESKY_USERNAME or BLUESKY_PASSWORD in environment variables');
+    }
+}
+
+// 🔄 Função para resetar contadores se necessário
+function resetCountersIfNeeded() {
+    const now = Date.now();
+    if (now - lastHourReset >= 3600000) {
+        actionPoints = 0;
+        lastHourReset = Date.now();
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
+        console.log('🔄 Pontos redefinidos para novo horário.');
     }
 
-    // 🔍 Função para filtrar publicações não repostadas
-    async function filterUnrepostedPosts(allPosts, token) {
-        const unrepostedPosts = [];
-        for (const post of allPosts) {
-            const isReposted = await checkIfReposted(post, token);
-            if (!isReposted) {
-                unrepostedPosts.push(post);
-            }
-        }
-        return unrepostedPosts;
+    if (now - lastDailyReset >= 86400000) {
+        dailyRequestCount = 0;
+        lastHourReset = Date.now();
+        saveState({ actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did });
+        console.log('🔄 Redefinição da contagem de solicitações diárias.');
     }
+}
 
-    // 🔄 Função para repostar publicações não repostadas
-    async function repostUnrepostedPosts(unrepostedPosts, token, did) {
-        const maxRepostsPerExecution = Math.min(MAX_REQUESTS_PER_EXECUTION, Math.floor(MAX_REQUESTS_PER_HOUR / (60 / cronMinutes)));
-        const delayTime = Math.max((cronMinutes * 60 * 1000) / maxRepostsPerExecution, 1000);
-
-        for (const post of unrepostedPosts) {
-            const delay = require('../utils/delay');
-            await repost(post, token, did);
-            await delay(delayTime);
+// 🔍 Função para filtrar publicações não repostadas
+async function filterUnrepostedPosts(allPosts, token) {
+    const unrepostedPosts = [];
+    for (const post of allPosts) {
+        const isReposted = await checkIfReposted(post, token);
+        if (!isReposted) {
+            unrepostedPosts.push(post);
         }
     }
+    return unrepostedPosts;
+}
 
-    // ⏰ Configura intervalo para trocar o token periodicamente
-    let intervalo = 30 * 60 * 1000;
-    setInterval(changeToken, intervalo);
+// 🔄 Função para repostar publicações não repostadas
+async function repostUnrepostedPosts(unrepostedPosts, token, did) {
+    const maxRepostsPerExecution = Math.min(MAX_REQUESTS_PER_EXECUTION, Math.floor(MAX_REQUESTS_PER_HOUR / (60 / cronMinutes)));
+    const delayTime = Math.max((cronMinutes * 60 * 1000) / maxRepostsPerExecution, 1000);
 
-    // 📤 Exporta a função principal
-    module.exports = { main };
+    for (const post of unrepostedPosts) {
+        const delay = require('../utils/delay');
+        await repost(post, token, did);
+        await delay(delayTime);
+    }
+}
+
+// ⏰ Configura intervalo para trocar o token periodicamente
+let intervalo = 30 * 60 * 1000;
+setInterval(changeToken, intervalo);
+
+// 📤 Exporta a função principal
+module.exports = { main };
