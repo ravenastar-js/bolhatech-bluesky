@@ -200,13 +200,13 @@ const WH_Embed = new EmbedBuilder()
 
       
     const processFiles = (files) => {
-        if (files?.$type.includes("images#view")) {
+        if (files.$type.includes("images#view")) {
             files.images.forEach((img, index) => {
                 const extension = getExtension(img.fullsize);
                 wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
             });
         }
-        if (files?.$type.includes("external#view")) {
+        if (files.$type.includes("external#view")) {
             let externalUrl = files.external.uri;
             if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
             const extension = getExtension(externalUrl);
@@ -216,8 +216,6 @@ const WH_Embed = new EmbedBuilder()
 
     processFiles(files);
 
-
-    if (wh_files.length > 0) {
         webhookClient.send({
             content: `<@&1282578310383145024>`,
             username: wh_username,
@@ -225,10 +223,7 @@ const WH_Embed = new EmbedBuilder()
             files: wh_files,
             embeds: [WH_Embed],
         });
-        console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
-    } 
-    
-    
+        console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`); 
 }
 
 // 🔄 Função para repostar uma publicação
