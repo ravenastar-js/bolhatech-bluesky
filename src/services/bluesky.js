@@ -205,11 +205,12 @@ async function sendWebhookNotification(target, repostData) {
         .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
         .setImage(embed_bannerURL)
 
-    // ⚙️ Configura o caminho do FFmpeg
-    ffmpeg.setFfmpegPath(pathToFfmpeg);
+    
 
     // 🎥 Função para download e conversão de vídeo
     const downloadAndConvertVideo = async (url, outputPath) => {
+     // ⚙️ Configura o caminho do FFmpeg
+    ffmpeg.setFfmpegPath(pathToFfmpeg);
         console.log(`🎥 Iniciando download e conversão do vídeo: ${url}`);
         return new Promise((resolve, reject) => {
             ffmpeg(url)
@@ -253,12 +254,9 @@ async function sendWebhookNotification(target, repostData) {
         }
     };
 
-    try {
-        // 🚀 Processa os arquivos embutidos
-        await processFiles(files);
-    } catch (error) {
-        console.error('⚠️ Erro ao processar e enviar o vídeo:', error);
-    }
+    
+    // 🚀 Processa os arquivos embutidos 
+    await processFiles(files);
 
     // 📤 Envia o webhook com os arquivos e o embed
     await webhookClient.send({
