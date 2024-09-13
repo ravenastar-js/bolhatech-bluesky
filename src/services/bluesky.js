@@ -209,9 +209,13 @@ async function sendWebhookNotification(target, repostData) {
 
     // 🎥 Função para baixar e converter o vídeo
     const downloadAndConvertVideo = async (url, outputPath) => {
+        console.log(`🎥 Iniciando download e conversão do vídeo: ${url}`);
         return new Promise((resolve, reject) => {
             ffmpeg(url)
                 .output(outputPath)
+                .on('start', () => {
+                    console.log('🚀 Conversão iniciada...');
+                })
                 .on('end', () => {
                     console.log('🎉 Conversão concluída!');
                     resolve();
