@@ -210,27 +210,26 @@ async function sendWebhookNotification(target, repostData) {
     const os = require('os');
 
     // 🔍 Função para verificar a quantidade de RAM disponível
-    const checkAvailableRAM = () => {
-        const totalRAM = os.totalmem();
-        const freeRAM = os.freemem();
-        const usedRAM = totalRAM - freeRAM;
-        const usedRAMInMB = usedRAM / 1024 / 1024;
-        const freeRAMInMB = freeRAM / 1024 / 1024;
+    const checkAvailableHeapMemory = () => {
+        const memoryUsage = process.memoryUsage();
+        const heapTotalInMB = memoryUsage.heapTotal / 1024 / 1024;
+        const heapUsedInMB = memoryUsage.heapUsed / 1024 / 1024;
+        const heapFreeInMB = heapTotalInMB - heapUsedInMB;
 
-        console.log(`Total RAM: ${totalRAM / 1024 / 1024} MB`);
-        console.log(`Used RAM: ${usedRAMInMB} MB`);
-        console.log(`Free RAM: ${freeRAMInMB} MB`);
+        console.log(`Total Heap Memory: ${heapTotalInMB.toFixed(2)} MB`);
+        console.log(`Used Heap Memory: ${heapUsedInMB.toFixed(2)} MB`);
+        console.log(`Free Heap Memory: ${heapFreeInMB.toFixed(2)} MB`);
 
-        return freeRAMInMB;
+        return heapFreeInMB;
     };
 
     // 🎥 Função para baixar e converter o vídeo
     const downloadAndConvertVideo = async (url, outputPath) => {
-        const freeRAMInMB = checkAvailableRAM();
-        const requiredRAMInMB = 500; // Defina a quantidade de RAM necessária para a conversão
+        const freeHeapMemoryInMB = checkAvailableHeapMemory();
+        const requiredHeapMemoryInMB = 500; // Defina a quantidade de memória heap necessária para a conversão
 
-        if (freeRAMInMB < requiredRAMInMB) {
-            throw new Error('Memória RAM insuficiente para processar o vídeo.');
+        if (freeHeapMemoryInMB < requiredHeapMemoryInMB) {
+            throw new Error('Memória heap insuficiente para processar o vídeo.');
         }
         console.log(`🎥 Iniciando download e conversão do vídeo: ${url}`);
         return new Promise((resolve, reject) => {
