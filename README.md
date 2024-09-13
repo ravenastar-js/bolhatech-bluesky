@@ -51,6 +51,5 @@ A quantidade de RAM necessária para converter um vídeo pode variar bastante de
 4. **Vídeos de ultra alta resolução (4K)**:
    - Pode usar 4 GB de RAM ou mais, dependendo da complexidade do vídeo e das configurações de conversão.
   
-> **Note**
+> [!NOTE]
 > Essas são apenas estimativas e o uso real de RAM pode variar. Se você estiver enfrentando problemas de memória, usar uma máquina com mais RAM pode ajudar a melhorar o desempenho.
-
