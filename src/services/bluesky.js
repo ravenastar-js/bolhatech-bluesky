@@ -118,7 +118,7 @@ async function getMentions(token) {
     }
 }
 
-// 🔖 Função para obter tags
+// 🔖 Função para obter tags 
 async function getTags(token) {
     try {
         const configTag = {
