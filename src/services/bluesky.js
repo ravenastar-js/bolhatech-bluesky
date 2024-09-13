@@ -213,8 +213,8 @@ async function sendWebhookNotification(target, repostData) {
         return new Promise((resolve, reject) => {
             ffmpeg(url)
                 .output(outputPath)
-                .addOption('-max_muxing_queue_size', '1024')
-                .addOption('-bufsize', '64M')
+                .addOption('-max_muxing_queue_size', '1512')
+                .addOption('-bufsize', '25M')
                 .on('start', () => {
                     console.log('🚀 Conversão iniciada...');
                 })
