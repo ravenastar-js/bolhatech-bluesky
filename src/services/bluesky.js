@@ -207,7 +207,7 @@ async function sendWebhookNotification(target, repostData) {
     // ⚙️ Configura o caminho do FFmpeg
     ffmpeg.setFfmpegPath(pathToFfmpeg);
 
-    // 🕒 Função para converter bytes em um formato legível
+    // 📏 Função para converter bytes em um formato legível
     function niceBytes(x) {
         const units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
         let l = 0, n = parseInt(x, 10) || 0;
@@ -217,16 +217,16 @@ async function sendWebhookNotification(target, repostData) {
         return (n.toFixed(n < 10 && l > 0 ? 1 : 0) + ' ' + units[l]);
     }
 
-    // 🔍 Função para verificar a quantidade de RAM disponível
+    // 🧠 Função para verificar a quantidade de memória heap disponível
     const checkAvailableHeapMemory = () => {
         const memoryUsage = process.memoryUsage();
         const heapTotal = memoryUsage.heapTotal;
         const heapUsed = memoryUsage.heapUsed;
         const heapFree = heapTotal - heapUsed;
 
-        console.log(`Total Heap Memory: ${niceBytes(heapTotal)}`);
-        console.log(`Used Heap Memory: ${niceBytes(heapUsed)}`);
-        console.log(`Free Heap Memory: ${niceBytes(heapFree)}`);
+        console.log(`💾 Total Heap Memory: ${niceBytes(heapTotal)}`);
+        console.log(`📈 Used Heap Memory: ${niceBytes(heapUsed)}`);
+        console.log(`📉 Free Heap Memory: ${niceBytes(heapFree)}`);
 
         return heapFree / 1024 / 1024; // Retorna a memória livre em MB
     };
@@ -252,7 +252,7 @@ async function sendWebhookNotification(target, repostData) {
                     resolve();
                 })
                 .on('error', (err) => {
-                    console.error('❌ Erro durante a conversão:', err);
+                    console.error('⚠️ Erro durante a conversão:', err);
                     reject(err);
                 })
                 .run();
@@ -285,7 +285,7 @@ async function sendWebhookNotification(target, repostData) {
         // 🚀 Processa os arquivos embutidos
         await processFiles(files);
     } catch (error) {
-        console.error('❌ Erro ao processar e enviar o vídeo:', error);
+        console.error('⚠️ Erro ao processar e enviar o vídeo:', error);
     }
 
     // 📤 Envia o webhook com os arquivos e o embed
