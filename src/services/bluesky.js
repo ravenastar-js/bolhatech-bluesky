@@ -188,27 +188,19 @@ const isImageUrl = (url) => {
     return imageExtensions.some(ext => url.includes(ext));
 };
 
-const processExternal = () => {
-    let externalUrl = files?.external.uri;
-    if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
-    const extension = getExtension(externalUrl);
-    wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
-};
-
-const processImages = () => {
+if (files?.$type === "app.bsky.embed.images#view") {
     files?.images.forEach((img, index) => {
         const extension = getExtension(img.fullsize);
         wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
     });
-};
+} 
 
-if (files?.$type === "app.bsky.embed.images#view") {
-    processImages();
-} else if (files?.$type === "app.bsky.embed.external#view" && !isYouTubeUrl(files.external.uri) && files.external.thumb) {
-    processExternal();
+if (files?.$type === "app.bsky.embed.external#view") {
+    let externalUrl = files?.external.uri;
+    if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
+    const extension = getExtension(externalUrl);
+    wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
 }
-
-wh_files;
  
     const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
