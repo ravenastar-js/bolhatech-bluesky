@@ -200,33 +200,39 @@ const WH_Embed = new EmbedBuilder()
 
       
     const processFiles = (files) => {
-   if (files?.$type.includes("images#view") && files?.$type.includes("external#view")) {
-        files.images.forEach((img, index) => {
-            const extension = getExtension(img.fullsize);
-            wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+        if (files?.$type.includes("images#view")) {
+            files.images.forEach((img, index) => {
+                const extension = getExtension(img.fullsize);
+                wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+            });
+        }
+        if (files?.$type.includes("external#view")) {
+            let externalUrl = files.external.uri;
+            if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
+            const extension = getExtension(externalUrl);
+            wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
+        }
+    };
+
+    processFiles(files);
+
+
+    if (wh_files.length > 0) {
+        webhookClient.send({
+            content: `<@&1282578310383145024>`,
+            username: wh_username,
+            avatarURL: wh_avatarURL,
+            files: wh_files,
+            embeds: [WH_Embed],
         });
-    } else if (files?.$type.includes("images#view")) {
-        files.images.forEach((img, index) => {
-            const extension = getExtension(img.fullsize);
-            wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+    } else {
+        webhookClient.send({
+            content: `<@&1282578310383145024>`,
+            username: wh_username,
+            avatarURL: wh_avatarURL,
+            embeds: [WH_Embed],
         });
-    } else if (files?.$type.includes("external#view")) {
-        let externalUrl = files.external.uri;
-        if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
-        const extension = getExtension(externalUrl);
-        wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
     }
-};
-
-processFiles(files)
-
-    webhookClient.send({
-        content: `<@&1282578310383145024>`,
-        username: wh_username,
-        avatarURL: wh_avatarURL,
-        files: wh_files,
-        embeds: [WH_Embed],
-    });
     
     console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 }
