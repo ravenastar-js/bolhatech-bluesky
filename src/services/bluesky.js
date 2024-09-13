@@ -1,7 +1,10 @@
 // 🌐 Carrega as variáveis de ambiente
 require('../config/dotenv.js');
 const axios = require('axios');
+const ffmpeg = require('fluent-ffmpeg');
+const pathToFfmpeg = require('ffmpeg-static');
 const fs = require('fs');
+const path = require('path');
 const { EmbedBuilder, WebhookClient } = require('discord.js');
 const {
     API_URL, TG, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
@@ -154,41 +157,44 @@ function limitarTexto(texto, limite = 1000) {
 
 // 🔔 Função para enviar notificação via webhook no Discord
 async function sendWebhookNotification(target, repostData) {
+    // 📌 Extrai a URI do alvo
     const t_uri = target.uri;
     const post_id = t_uri.split('/').pop();
     const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
 
+    // ✏️ Obtém o texto do post e prepara a descrição do embed
     let rtext = target.record?.text || "";
     let desc_embed = rtext.length === 0 ? "" : ` \`\`\`\n${rtext}\n\`\`\` `;
 
+    // 🕒 Converte a data ISO para Unix Epoch Time em segundos
     const isoDate = target.record.createdAt;
     const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
 
+    // 📂 Obtém os arquivos embutidos no post
     const files = target.embed;
-let wh_files = [];
+    let wh_files = [];
 
-const getExtension = (url) => {
-    if (url.includes("@gif") || url.includes(".gif")) return "gif";
-    return "png";
-};
+    // 🔍 Função para obter a extensão do arquivo
+    const getExtension = (url) => {
+        if (url.includes("@gif") || url.includes(".gif")) return "gif";
+        return "png";
+    };
 
-const createFileObject = (url, name, description) => ({
-    attachment: url,
-    name,
-    description: limitarTexto(description)
-});
+    // 🗂️ Função para criar um objeto de arquivo
+    const createFileObject = (url, name, description) => ({
+        attachment: url,
+        name,
+        description: limitarTexto(description)
+    });
 
-const isYouTubeUrl = (url) => {
-    const youtubeDomains = ["youtube.com", "youtu.be"];
-    return youtubeDomains.some(domain => url.includes(domain));
-};
+    // 🖼️ Função para verificar se a URL é de uma imagem
+    const isImageUrl = (url) => {
+        const imageExtensions = [".png", ".jpeg", ".gif"];
+        return imageExtensions.some(ext => url.includes(ext));
+    };
 
-const isImageUrl = (url) => {
-    const imageExtensions = [".png", ".jpeg", ".gif"];
-    return imageExtensions.some(ext => url.includes(ext));
-};
-    
-const WH_Embed = new EmbedBuilder()
+    // 🖋️ Cria o embed para o webhook
+    const WH_Embed = new EmbedBuilder()
         .setColor(embed_color)
         .setAuthor({
             name: `${target.author.handle}`,
@@ -198,32 +204,72 @@ const WH_Embed = new EmbedBuilder()
         .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
         .setImage(embed_bannerURL)
 
-      
-    const processFiles = (files) => {
-        if (files.$type.includes("images#view")) {
+    // ⚙️ Configura o caminho do FFmpeg
+    ffmpeg.setFfmpegPath(pathToFfmpeg);
+
+    // 🎥 Função para baixar e converter o vídeo
+    const downloadAndConvertVideo = async (url, outputPath) => {
+        return new Promise((resolve, reject) => {
+            ffmpeg(url)
+                .output(outputPath)
+                .on('end', () => {
+                    console.log('🎉 Conversão concluída!');
+                    resolve();
+                })
+                .on('error', (err) => {
+                    console.error('❌ Erro durante a conversão:', err);
+                    reject(err);
+                })
+                .run();
+        });
+    };
+
+    // 📂 Função para processar os arquivos embutidos
+    const processFiles = async (files) => {
+        if (files?.$type.includes("images#view")) {
             files.images.forEach((img, index) => {
                 const extension = getExtension(img.fullsize);
                 wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
             });
         }
-        if (files.$type.includes("external#view")) {
+        if (files?.$type.includes("external#view")) {
             let externalUrl = files.external.uri;
             if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
             const extension = getExtension(externalUrl);
             wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
         }
+        if (files?.$type.includes("video#view")) {
+            const video = files;
+            const outputFilePath = path.join(__dirname, 'output.mp4');
+            await downloadAndConvertVideo(video.playlist, outputFilePath);
+            wh_files.push(createFileObject(outputFilePath, `video.mp4`, video.alt));
+        }
     };
 
-    processFiles(files);
+    try {
+        // 🚀 Processa os arquivos embutidos
+        await processFiles(files);
 
-        webhookClient.send({
+        // 📤 Envia o webhook com os arquivos e o embed
+        await webhookClient.send({
             content: `<@&1282578310383145024>`,
             username: wh_username,
             avatarURL: wh_avatarURL,
             files: wh_files,
             embeds: [WH_Embed],
         });
-        console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`); 
+
+        // 🗑️ Opcional: Remove o arquivo após o envio
+        wh_files.forEach(file => {
+            if (fs.existsSync(file.attachment)) {
+                fs.unlinkSync(file.attachment);
+            }
+        });
+    } catch (error) {
+        console.error('❌ Erro ao processar e enviar o vídeo:', error);
+    }
+
+    console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 }
 
 // 🔄 Função para repostar uma publicação
