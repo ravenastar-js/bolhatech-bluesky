@@ -31,8 +31,10 @@
 <a href="https://discloud.app"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&duration=600&pause=500&color=57F287&center=true&vCenter=true&multiline=true&width=200&height=60&lines=%E2%96%B2;CLIQUE+AQUI" alt="Typing SVG" /></a>
 
 </div>
+</div>
 
 --- 
+
 #### **Usando o FFMPEG para conversão de vídeos:**
 
 A quantidade de RAM necessária para converter um vídeo pode variar bastante dependendo de vários fatores, como a resolução do vídeo, a duração, o codec utilizado e as configurações específicas de conversão. No entanto, aqui estão algumas estimativas gerais:
