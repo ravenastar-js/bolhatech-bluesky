@@ -199,23 +199,21 @@ const WH_Embed = new EmbedBuilder()
         .setImage(embed_bannerURL)
 
       
-    
-if (files?.$type === "app.bsky.embed.images#view" && files?.$type === "app.bsky.embed.external#view") {
-    files.images.forEach((img, index) => {
-        const extension = getExtension(img.fullsize);
-        wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
-    });
-} else if (files?.$type === "app.bsky.embed.images#view" && files?.$type !== "app.bsky.embed.external#view") {
-    files.images.forEach((img, index) => {
-        const extension = getExtension(img.fullsize);
-        wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
-    });
-} else if (files?.$type === "app.bsky.embed.external#view" && files?.$type !== "app.bsky.embed.images#view") {
-    let externalUrl = files.external.uri;
-    if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
-    const extension = getExtension(externalUrl);
-    wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
- } 
+    const processFiles = (files) => {
+    if (files?.$type.includes("images#view")) {
+        files.images.forEach((img, index) => {
+            const extension = getExtension(img.fullsize);
+            wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+        });
+    } else if (files?.$type.includes("external#view")) {
+        let externalUrl = files.external.uri;
+        if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
+        const extension = getExtension(externalUrl);
+        wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
+    }
+};
+
+processFiles(files)
 
     webhookClient.send({
         content: `<@&1282578310383145024>`,
