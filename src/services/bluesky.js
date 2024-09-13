@@ -240,6 +240,12 @@ async function sendWebhookNotification(target, repostData) {
                 wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
             });
         }
+        if (files?.$type.includes("recordWithMedia#view")) {
+            files.images.forEach((img, index) => {
+                const extension = getExtension(img.fullsize);
+                wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+            });
+        }
         if (files?.$type.includes("external#view")) {
             let externalUrl = files.external.uri;
             if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
