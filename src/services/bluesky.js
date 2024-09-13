@@ -157,6 +157,7 @@ function limitarTexto(texto, limite = 1000) {
 
 // 🔔 Função para enviar notificação via webhook no Discord
 async function sendWebhookNotification(target, repostData) {
+    try{
     // 📌 Extrai a URI do alvo
     const t_uri = target.uri;
     const post_id = t_uri.split('/').pop();
@@ -277,6 +278,10 @@ async function sendWebhookNotification(target, repostData) {
 
 
     console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
+
+    } catch (err) {
+        handleRateLimitError(err, 'sendWebhookNotification');
+    }
 }
 
 // 🔄 Função para repostar uma publicação
