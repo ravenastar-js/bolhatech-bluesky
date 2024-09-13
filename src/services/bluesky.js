@@ -207,8 +207,6 @@ async function sendWebhookNotification(target, repostData) {
     // ⚙️ Configura o caminho do FFmpeg
     ffmpeg.setFfmpegPath(pathToFfmpeg);
 
-    const os = require('os');
-
     // 🔍 Função para verificar a quantidade de RAM disponível
     const checkAvailableHeapMemory = () => {
         const memoryUsage = process.memoryUsage();
