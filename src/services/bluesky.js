@@ -207,8 +207,31 @@ async function sendWebhookNotification(target, repostData) {
     // ⚙️ Configura o caminho do FFmpeg
     ffmpeg.setFfmpegPath(pathToFfmpeg);
 
+    const os = require('os');
+
+    // 🔍 Função para verificar a quantidade de RAM disponível
+    const checkAvailableRAM = () => {
+        const totalRAM = os.totalmem();
+        const freeRAM = os.freemem();
+        const usedRAM = totalRAM - freeRAM;
+        const usedRAMInMB = usedRAM / 1024 / 1024;
+        const freeRAMInMB = freeRAM / 1024 / 1024;
+
+        console.log(`Total RAM: ${totalRAM / 1024 / 1024} MB`);
+        console.log(`Used RAM: ${usedRAMInMB} MB`);
+        console.log(`Free RAM: ${freeRAMInMB} MB`);
+
+        return freeRAMInMB;
+    };
+
     // 🎥 Função para baixar e converter o vídeo
     const downloadAndConvertVideo = async (url, outputPath) => {
+        const freeRAMInMB = checkAvailableRAM();
+        const requiredRAMInMB = 500; // Defina a quantidade de RAM necessária para a conversão
+
+        if (freeRAMInMB < requiredRAMInMB) {
+            throw new Error('Memória RAM insuficiente para processar o vídeo.');
+        }
         console.log(`🎥 Iniciando download e conversão do vídeo: ${url}`);
         return new Promise((resolve, reject) => {
             ffmpeg(url)
@@ -256,7 +279,7 @@ async function sendWebhookNotification(target, repostData) {
     } catch (error) {
         console.error('❌ Erro ao processar e enviar o vídeo:', error);
     }
-    
+
     // 📤 Envia o webhook com os arquivos e o embed
     await webhookClient.send({
         content: `<@&1282578310383145024>`,
