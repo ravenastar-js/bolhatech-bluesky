@@ -241,7 +241,7 @@ async function sendWebhookNotification(target, repostData) {
             });
         }
         if (files?.$type.includes("recordWithMedia#view")) {
-            files.images.forEach((img, index) => {
+            files.media.images.forEach((img, index) => {
                 const extension = getExtension(img.fullsize);
                 wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
             });
