@@ -225,9 +225,10 @@ const WH_Embed = new EmbedBuilder()
             files: wh_files,
             embeds: [WH_Embed],
         });
+        console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
     } 
     
-    console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
+    
 }
 
 // 🔄 Função para repostar uma publicação
