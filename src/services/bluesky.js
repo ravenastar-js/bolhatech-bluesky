@@ -254,9 +254,9 @@ async function sendWebhookNotification(target, repostData) {
         }
         if (files?.$type.includes("video#view")) {
             const video = files;
-            const outputFilePath = path.join(__dirname, 'output.mp4');
+            const outputFilePath = path.join(__dirname, `${post_id}-vid.mp4`);
             await downloadAndConvertVideo(video.playlist, outputFilePath);
-            wh_files.push(createFileObject(outputFilePath, `video.mp4`, video.alt));
+            wh_files.push(createFileObject(outputFilePath, `${post_id}-vid.mp4`, video.alt));
         }
     };
 
