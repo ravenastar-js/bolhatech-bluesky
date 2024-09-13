@@ -205,15 +205,11 @@ if (files?.$type === "app.bsky.embed.images#view") {
         const extension = getExtension(img.fullsize);
         wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
     });
-     
-} 
-
-if (files?.$type === "app.bsky.embed.external#view" && files?.$type !== "app.bsky.embed.images#view") {
+} else if (files?.$type === "app.bsky.embed.external#view") {
     let externalUrl = files.external.uri;
     if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
     const extension = getExtension(externalUrl);
     wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
-
 }
 
     webhookClient.send({
