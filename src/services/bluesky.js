@@ -253,10 +253,12 @@ async function sendWebhookNotification(target, repostData) {
             wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
         }
         if (files?.$type.includes("video#view")) {
+            let videoCount = 1;
             const video = files;
-            const outputFilePath = path.join(__dirname, `${post_id}-vid.mp4`);
+            const outputFilePath = path.join(__dirname, `${videoCount}-${post_id}.mp4`);
             await downloadAndConvertVideo(video.playlist, outputFilePath);
-            wh_files.push(createFileObject(outputFilePath, `${post_id}-vid.mp4`, video.alt));
+            wh_files.push(createFileObject(outputFilePath, `${videoCount}-${post_id}.mp4`, video.alt));
+            videoCount++;
         }
     };
 
@@ -273,7 +275,7 @@ async function sendWebhookNotification(target, repostData) {
         embeds: [WH_Embed],
     });
 
-    // 🗑️ Opcional: Remove o arquivo após o envio
+    // 🗑️ Remove o arquivo após o envio
     wh_files.forEach(file => {
         if (fs.existsSync(file.attachment)) {
             fs.unlinkSync(file.attachment);
