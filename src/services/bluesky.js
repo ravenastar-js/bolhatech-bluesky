@@ -225,7 +225,7 @@ async function sendWebhookNotification(target, repostData) {
                     resolve();
                 })
                 .on('error', (err) => {
-                    console.error('⚠️ Erro durante a conversão:', err);
+                    console.error('⚠️ Erro durante a conversão:');
                     reject(err);
                 })
                 .run();
@@ -262,10 +262,13 @@ async function sendWebhookNotification(target, repostData) {
         }
     };
 
-    
+    try{
     // 🚀 Processa os arquivos embutidos 
     await processFiles(files);
-
+   } catch (err) {
+        handleRateLimitError(err, 'processFiles');
+    }
+    
     // 📤 Envia o webhook com os arquivos e o embed
     await webhookClient.send({
         content: `<@&1282578310383145024>`,
