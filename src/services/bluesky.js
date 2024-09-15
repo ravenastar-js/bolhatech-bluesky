@@ -12,7 +12,12 @@ const {
     wh_avatarURL, wh_username
 } = require('../config/config');
 
-const LUCENE = TG.split(',').map(word => `+${word}`).join(' ');
+function convertString(tags) {
+    let words = tags.split(',');
+    return words.length === 1 ? tags : words.map(word => `+${word}`).join(' ');
+}
+
+const LUCENE = convertString(TG)
 // 🗝️ Cria um objeto para armazenar o token
 let tokenObject = { token: "" };
 
@@ -158,136 +163,136 @@ function limitarTexto(texto, limite = 1000) {
 
 // 🔔 Função para enviar notificação via webhook no Discord
 async function sendWebhookNotification(target, repostData) {
-    try{
-    // 📌 Extrai a URI do alvo
-    const t_uri = target.uri;
-    const post_id = t_uri.split('/').pop();
-    const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
+    try {
+        // 📌 Extrai a URI do alvo
+        const t_uri = target.uri;
+        const post_id = t_uri.split('/').pop();
+        const link = `https://bsky.app/profile/${target.author.handle}/post/${post_id}`;
 
-    // ✏️ Obtém o texto do post e prepara a descrição do embed
-    let rtext = target.record?.text || "";
-    let desc_embed = rtext.length === 0 ? "" : ` \`\`\`\n${rtext}\n\`\`\` `;
+        // ✏️ Obtém o texto do post e prepara a descrição do embed
+        let rtext = target.record?.text || "";
+        let desc_embed = rtext.length === 0 ? "" : ` \`\`\`\n${rtext}\n\`\`\` `;
 
-    // 🕒 Converte a data ISO para Unix Epoch Time em segundos
-    const isoDate = target.record.createdAt;
-    const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
+        // 🕒 Converte a data ISO para Unix Epoch Time em segundos
+        const isoDate = target.record.createdAt;
+        const unixEpochTimeInSeconds = Math.floor(new Date(isoDate).getTime() / 1000);
 
-    // 📂 Obtém os arquivos embutidos no post
-    const files = target.embed;
-    let wh_files = [];
+        // 📂 Obtém os arquivos embutidos no post
+        const files = target.embed;
+        let wh_files = [];
 
-    // 🔍 Função para obter a extensão do arquivo
-    const getExtension = (url) => {
-        if (url.includes("@gif") || url.includes(".gif")) return "gif";
-        return "png";
-    };
+        // 🔍 Função para obter a extensão do arquivo
+        const getExtension = (url) => {
+            if (url.includes("@gif") || url.includes(".gif")) return "gif";
+            return "png";
+        };
 
-    // 🗂️ Função para criar um objeto de arquivo
-    const createFileObject = (url, name, description) => ({
-        attachment: url,
-        name,
-        description: limitarTexto(description)
-    });
-
-    // 🖼️ Função para verificar se a URL é de uma imagem
-    const isImageUrl = (url) => {
-        const imageExtensions = [".png", ".jpeg", ".gif"];
-        return imageExtensions.some(ext => url.includes(ext));
-    };
-
-    // 🖋️ Cria o embed para o webhook
-    const WH_Embed = new EmbedBuilder()
-        .setColor(embed_color)
-        .setAuthor({
-            name: `${target.author.handle}`,
-            iconURL: `${target.author.avatar}`,
-            url: `https://bsky.app/profile/${target.author.handle}`
-        })
-        .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
-        .setImage(embed_bannerURL)
-
-    
-
-    // 🎥 Função para download e conversão de vídeo
-    const downloadAndConvertVideo = async (url, outputPath) => {
-     // ⚙️ Configura o caminho do FFmpeg
-    ffmpeg.setFfmpegPath(pathToFfmpeg);
-        console.log(`🎥 Iniciando download e conversão do vídeo: ${url}`);
-        return new Promise((resolve, reject) => {
-            ffmpeg(url)
-                .output(outputPath)
-                .addOption('-max_muxing_queue_size', '1512')
-                .addOption('-bufsize', '25M')
-                .on('start', () => {
-                    console.log('🚀 Conversão iniciada...');
-                })
-                .on('end', () => {
-                    console.log('🎉 Conversão concluída!');
-                    resolve();
-                })
-                .on('error', (err) => {
-                    console.error('⚠️ Erro durante a conversão:');
-                    reject(err);
-                })
-                .run();
+        // 🗂️ Função para criar um objeto de arquivo
+        const createFileObject = (url, name, description) => ({
+            attachment: url,
+            name,
+            description: limitarTexto(description)
         });
-    };
 
-    // 📂 Função para processar os arquivos embutidos
-    const processFiles = async (files) => {
-        if (files?.$type.includes("images#view")) {
-            files.images.forEach((img, index) => {
-                const extension = getExtension(img.fullsize);
-                wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+        // 🖼️ Função para verificar se a URL é de uma imagem
+        const isImageUrl = (url) => {
+            const imageExtensions = [".png", ".jpeg", ".gif"];
+            return imageExtensions.some(ext => url.includes(ext));
+        };
+
+        // 🖋️ Cria o embed para o webhook
+        const WH_Embed = new EmbedBuilder()
+            .setColor(embed_color)
+            .setAuthor({
+                name: `${target.author.handle}`,
+                iconURL: `${target.author.avatar}`,
+                url: `https://bsky.app/profile/${target.author.handle}`
+            })
+            .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
+            .setImage(embed_bannerURL)
+
+
+
+        // 🎥 Função para download e conversão de vídeo
+        const downloadAndConvertVideo = async (url, outputPath) => {
+            // ⚙️ Configura o caminho do FFmpeg
+            ffmpeg.setFfmpegPath(pathToFfmpeg);
+            console.log(`🎥 Iniciando download e conversão do vídeo: ${url}`);
+            return new Promise((resolve, reject) => {
+                ffmpeg(url)
+                    .output(outputPath)
+                    .addOption('-max_muxing_queue_size', '1512')
+                    .addOption('-bufsize', '25M')
+                    .on('start', () => {
+                        console.log('🚀 Conversão iniciada...');
+                    })
+                    .on('end', () => {
+                        console.log('🎉 Conversão concluída!');
+                        resolve();
+                    })
+                    .on('error', (err) => {
+                        console.error('⚠️ Erro durante a conversão:');
+                        reject(err);
+                    })
+                    .run();
             });
-        }
-        if (files?.$type.includes("recordWithMedia#view")) {
-            files.media.images.forEach((img, index) => {
-                const extension = getExtension(img.fullsize);
-                wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
-            });
-        }
-        if (files?.$type.includes("external#view")) {
-            let externalUrl = files.external.uri;
-            if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
-            const extension = getExtension(externalUrl);
-            wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
-        }
-        if (files?.$type.includes("video#view")) {
-            let videoCount = 1;
-            const video = files;
-            const outputFilePath = path.join(__dirname, `${videoCount}-${post_id}.mp4`);
-            await downloadAndConvertVideo(video.playlist, outputFilePath);
-            wh_files.push(createFileObject(outputFilePath, `${videoCount}-${post_id}.mp4`, video.alt));
-            videoCount++;
-        }
-    };
+        };
 
-    try{
-    // 🚀 Processa os arquivos embutidos 
-    await processFiles(files);
-   } catch (err) {
-        handleRateLimitError(err, 'processFiles');
-    }
-    
-    // 📤 Envia o webhook com os arquivos e o embed
-    await webhookClient.send({
-        content: `<@&1282578310383145024>`,
-        username: wh_username,
-        avatarURL: wh_avatarURL,
-        files: wh_files,
-        embeds: [WH_Embed],
-    });
+        // 📂 Função para processar os arquivos embutidos
+        const processFiles = async (files) => {
+            if (files?.$type.includes("images#view")) {
+                files.images.forEach((img, index) => {
+                    const extension = getExtension(img.fullsize);
+                    wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+                });
+            }
+            if (files?.$type.includes("recordWithMedia#view")) {
+                files.media.images.forEach((img, index) => {
+                    const extension = getExtension(img.fullsize);
+                    wh_files.push(createFileObject(img.fullsize, `${index + 1}.${extension}`, img.alt));
+                });
+            }
+            if (files?.$type.includes("external#view")) {
+                let externalUrl = files.external.uri;
+                if (!isImageUrl(externalUrl)) externalUrl = files?.external.thumb;
+                const extension = getExtension(externalUrl);
+                wh_files.push(createFileObject(externalUrl, `external.${extension}`, files?.external.description));
+            }
+            if (files?.$type.includes("video#view")) {
+                let videoCount = 1;
+                const video = files;
+                const outputFilePath = path.join(__dirname, `${videoCount}-${post_id}.mp4`);
+                await downloadAndConvertVideo(video.playlist, outputFilePath);
+                wh_files.push(createFileObject(outputFilePath, `${videoCount}-${post_id}.mp4`, video.alt));
+                videoCount++;
+            }
+        };
 
-    // 🗑️ Remove o arquivo após o envio
-    wh_files.forEach(file => {
-        if (fs.existsSync(file.attachment)) {
-            fs.unlinkSync(file.attachment);
+        try {
+            // 🚀 Processa os arquivos embutidos 
+            await processFiles(files);
+        } catch (err) {
+            handleRateLimitError(err, 'processFiles');
         }
-    });
+
+        // 📤 Envia o webhook com os arquivos e o embed
+        await webhookClient.send({
+            content: `<@&1282578310383145024>`,
+            username: wh_username,
+            avatarURL: wh_avatarURL,
+            files: wh_files,
+            embeds: [WH_Embed],
+        });
+
+        // 🗑️ Remove o arquivo após o envio
+        wh_files.forEach(file => {
+            if (fs.existsSync(file.attachment)) {
+                fs.unlinkSync(file.attachment);
+            }
+        });
 
 
-    console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
+        console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 
     } catch (err) {
         handleRateLimitError(err, 'sendWebhookNotification');
