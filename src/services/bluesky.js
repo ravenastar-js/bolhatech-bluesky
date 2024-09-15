@@ -106,20 +106,9 @@ function handleRateLimitError(err, functionName) {
     }
 }
 
-// 📣 Função para obter menções
-async function getMentions(token) {
-    try {
-        const { data } = await axios.get(`${API_URL}/app.bsky.notification.listNotifications`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        return { mentions: data.notifications.filter(({ reason }) => reason === 'mention') };
-    } catch (err) {
-        handleRateLimitError(err, 'getMentions');
-    }
-}
 
 // 🔖 Função para obter tags 
-async function getTags(token) {
+async function searchPosts(token) {
     try {
         const configTag = {
             method: 'get',
@@ -133,7 +122,7 @@ async function getTags(token) {
         const { data } = await axios(configTag);
         return { tags: data.posts.filter(({ indexedAt }) => indexedAt).sort((a, b) => a.typeid - b.typeid) };
     } catch (err) {
-        handleRateLimitError(err, 'getTags');
+        handleRateLimitError(err, 'searchPosts');
     }
 }
 
@@ -355,10 +344,10 @@ async function main() {
 
         await getAccessToken();
 
-        const { mentions } = await getMentions(token);
-        const { tags } = await getTags(token);
 
-        const allPosts = [...mentions, ...tags];
+        const { tags } = await searchPosts(token);
+
+        const allPosts = [...tags];
         const unrepostedPosts = await filterUnrepostedPosts(allPosts, token);
 
         if (unrepostedPosts.length === 0) {

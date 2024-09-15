@@ -8,7 +8,7 @@ function convertString(tags) {
     return words.length === 1 ? tags : words.map(word => `${word}`).join('|');
 }
 
-const LUCENE = convertString(TG)
+const LUCENE = convertString(TG+`,@${process.env.BLUESKY_USERNAME}`)
 
 const MAX_REQUESTS_PER_HOUR = 1666; // Limite de 1.666 registros por hora
 const MAX_REQUESTS_PER_EXECUTION = 300; // Limite de 300 solicitações por execução do CronJob
