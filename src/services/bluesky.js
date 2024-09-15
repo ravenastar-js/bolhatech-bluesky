@@ -14,7 +14,7 @@ const {
 
 function convertString(tags) {
     let words = tags.split(',');
-    return words.length === 1 ? tags : words.map(word => `+${word}`).join(' ');
+    return words.length === 1 ? tags : words.map(word => `+${word}`).join('%20');
 }
 
 const LUCENE = convertString(TG)
