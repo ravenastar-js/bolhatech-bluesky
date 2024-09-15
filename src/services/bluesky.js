@@ -124,7 +124,7 @@ async function getTags(token) {
         const configTag = {
             method: 'get',
             maxBodyLength: Infinity,
-            url: `${API_URL}/app.bsky.feed.searchPosts?q=${LUCENE}&sort=latest&tag=${TG}&limit=100`,
+            url: `${API_URL}/app.bsky.feed.searchPosts?q=${LUCENE}&sort=latest&limit=100`,
             headers: {
                 'Accept': 'application/json',
                 'Authorization': `Bearer ${token}`
