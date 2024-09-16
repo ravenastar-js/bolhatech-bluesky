@@ -17,7 +17,7 @@ const cronMinutes = 8;
 const MAX_POINTS_PER_HOUR = 5000; // Limite de pontos por hora
 
 const embed_color = "#4ec773"
-const embed_bannerURL = "https://i.imgur.com/2B01blo.png"
+const embed_bannerURL = "https://i.imgur.com/gGY2jfX.png"
 const wh_avatarURL = "https://i.imgur.com/0q9F06h.png"
 const wh_username = process.env.BLUESKY_USERNAME
 
