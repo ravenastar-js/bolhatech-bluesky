@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const { EmbedBuilder, WebhookClient } = require('discord.js');
 const {
-    API_URL, LUCENE, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
+    API_URL, LUCENE, FTX, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
     cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL,
     wh_avatarURL, wh_username
 } = require('../config/config');
@@ -120,7 +120,13 @@ async function searchPosts(token) {
             }
         };
         const { data } = await axios(configTag);
-        return { tags: data.posts.filter(({ indexedAt }) => indexedAt).sort((a, b) => a.typeid - b.typeid) };
+
+        // ⚜️ Filtrar e ordenar posts
+        const filteredPosts = data.posts
+            .filter(({ indexedAt, record }) => indexedAt && !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase())))
+            .sort((a, b) => a.typeid - b.typeid);
+
+        return { tags: filteredPosts };
     } catch (err) {
         handleRateLimitError(err, 'searchPosts');
     }
