@@ -22,13 +22,7 @@
 
 #### 🎯 ADDITIONAL TRIGGERS / GATILHOS ADICIONAIS
 
-```
-🎯 mulhertech
-🎯 girltech
-🎯 bubbletech
-🎯 discloud
-```
-
+🎯 mulhertech | 🎯 girltech | 🎯 bubbletech | 🎯 discloud
 
 <div align="center">
 
