@@ -14,8 +14,8 @@ function fString(f) {
     return words.length === 1 ? f : words;
 }
 
-const EXTRA = `,girltech,bubbletech,discloud,@${process.env.BLUESKY_USERNAME}`
-const LUCENE = convertString(TG + EXTRA)
+const EXTRAS = `,mulhertech,girltech,bubbletech,discloud,@${process.env.BLUESKY_USERNAME}`
+const LUCENE = convertString(TG + EXTRAS)
 const FTX = fString(FTEXT)
 
 const MAX_REQUESTS_PER_HOUR = 1666; // Limite de 1.666 registros por hora

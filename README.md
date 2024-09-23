@@ -20,6 +20,14 @@
 ⏰ Intervalo de tempo para verificar as postagens (a cada 8 min)<br>
 ⏰ time interval to check posts (every 8 min)
 
+#### 🎯 ADDITIONAL TRIGGERS / GATILHOS ADICIONAIS
+</div>
+
+- mulhertech
+- girltech
+- bubbletech
+- discloud
+
 <div align="center">
 
 # ▼ HOST ▼

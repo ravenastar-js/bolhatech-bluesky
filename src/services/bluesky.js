@@ -107,7 +107,7 @@ function handleRateLimitError(err, functionName) {
 }
 
 
-// 🔖 Função para obter tags 
+// 🔖 Função para obter posts
 async function searchPosts(token) {
     try {
         const configTag = {
@@ -126,7 +126,7 @@ async function searchPosts(token) {
             .filter(({ indexedAt, record }) => indexedAt && !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase())))
             .sort((a, b) => a.typeid - b.typeid);
 
-        return { tags: filteredPosts };
+        return { posts: filteredPosts };
     } catch (err) {
         handleRateLimitError(err, 'searchPosts');
     }
@@ -351,9 +351,9 @@ async function main() {
         await getAccessToken();
 
 
-        const { tags } = await searchPosts(token);
+        const { posts } = await searchPosts(token);
 
-        const allPosts = [...tags];
+        const allPosts = [...posts];
         const unrepostedPosts = await filterUnrepostedPosts(allPosts, token);
 
         if (unrepostedPosts.length === 0) {
