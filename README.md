@@ -1,6 +1,6 @@
 <div align="center">
 <a href="https://bsky.app/profile/bolhatech.pages.dev" >
-  <img src="https://i.imgur.com/2B01blo.png" width="500">
+  <img src="https://i.imgur.com/gGY2jfX.png" width="500">
 </a>
 <br> <br> 
 
