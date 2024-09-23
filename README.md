@@ -1,9 +1,4 @@
-## 🦋 Bluesky Repost Bot 
 <div align="center">
-<a href="https://docs.bsky.app/">
-  <img src="https://i.imgur.com/8HGAasG.png" width="500">
-</a>
-  <br>
 <a href="https://bsky.app/profile/bolhatech.pages.dev" >
   <img src="https://i.imgur.com/2B01blo.png" width="500">
 </a>
@@ -24,6 +19,10 @@
 
 🎯 mulhertech | 🎯 girltech | 🎯 bubbletech | 🎯 discloud
 
+<a href="https://docs.bsky.app/">
+  <img src="https://i.imgur.com/8HGAasG.png" width="500">
+</a>
+<br><br>
 <div align="center">
 
 # ▼ HOST ▼
