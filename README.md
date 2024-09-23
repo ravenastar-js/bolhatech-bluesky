@@ -1,4 +1,4 @@
-## Bluesky Repost Bot 
+## 🦋 Bluesky Repost Bot 
 <div align="center">
 <a href="https://docs.bsky.app/">
   <img src="https://i.imgur.com/8HGAasG.png" width="500">
@@ -21,12 +21,14 @@
 ⏰ time interval to check posts (every 8 min)
 
 #### 🎯 ADDITIONAL TRIGGERS / GATILHOS ADICIONAIS
-</div>
 
-- mulhertech
-- girltech
-- bubbletech
-- discloud
+```
+🎯 mulhertech
+🎯 girltech
+🎯 bubbletech
+🎯 discloud
+```
+
 
 <div align="center">
 
