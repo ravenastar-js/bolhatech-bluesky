@@ -17,7 +17,7 @@
 
 #### 🎯 ADDITIONAL TRIGGERS / GATILHOS ADICIONAIS
 
-🎯 mulhertech | 🎯 girltech | 🎯 bubbletech | 🎯 discloud
+🎯 studytechbr | 🎯 studytech | 🎯 mulhertech | 🎯 girltech | 🎯 bubbletech | 🎯 discloud
 
 <a href="https://docs.bsky.app/">
   <img src="https://i.imgur.com/8HGAasG.png" width="500">
