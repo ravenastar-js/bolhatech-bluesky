@@ -1,5 +1,4 @@
 // 🌐 Carrega as variáveis de ambiente
-require('../config/dotenv.js');
 const axios = require('axios');
 const ffmpeg = require('fluent-ffmpeg');
 const pathToFfmpeg = require('ffmpeg-static');
@@ -9,7 +8,8 @@ const { EmbedBuilder, WebhookClient } = require('discord.js');
 const {
     API_URL, LUCENE, FTX, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
     cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL,
-    wh_avatarURL, wh_username
+    wh_avatarURL, wh_username, WH_ID, WH_TOKEN, BLUESKY_USERNAME,
+    BLUESKY_PASSWORD
 } = require('../config/config');
 
 // 🗝️ Cria um objeto para armazenar o token
@@ -21,7 +21,7 @@ function tokenSet(newToken) {
 }
 
 const stateFilePath = './state.json';
-const webhookClient = new WebhookClient({ id: process.env.WH_ID, token: process.env.WH_TOKEN });
+const webhookClient = new WebhookClient({ id: WH_ID, token: WH_TOKEN });
 
 // 💾 Função para carregar o estado do arquivo JSON
 function loadState() {
@@ -56,8 +56,8 @@ async function getAccessToken() {
             return;
         }
         const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
-            identifier: process.env.BLUESKY_USERNAME,
-            password: process.env.BLUESKY_PASSWORD
+            identifier: BLUESKY_USERNAME,
+            password: BLUESKY_PASSWORD
         });
 
         dailyRequestCount += 3;
@@ -82,8 +82,8 @@ async function changeToken() {
         console.log('🔄 token atualizado.');
 
         const { data } = await axios.post(`${API_URL}/com.atproto.server.createSession`, {
-            identifier: process.env.BLUESKY_USERNAME,
-            password: process.env.BLUESKY_PASSWORD
+            identifier: BLUESKY_USERNAME,
+            password: BLUESKY_PASSWORD
         });
 
         dailyRequestCount += 3;
@@ -369,7 +369,7 @@ async function main() {
 
 // ✅ Função para validar variáveis de ambiente
 function validateEnvVariables() {
-    if (!process.env.BLUESKY_USERNAME || !process.env.BLUESKY_PASSWORD) {
+    if (!BLUESKY_USERNAME || !BLUESKY_PASSWORD) {
         throw new Error('Missing BLUESKY_USERNAME or BLUESKY_PASSWORD in environment variables');
     }
 }
