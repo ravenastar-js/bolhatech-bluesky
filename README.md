@@ -1,3 +1,6 @@
+> [!WARNING]
+> `bolhatech` realizará reposts de publicações apenas de acordo com os gatilhos definidos neste projeto. Caso deseje impedir tal ação, basta bloquear [@bolhatech.pages.dev](https://bsky.app/profile/bolhatech.pages.dev).
+
 <div align="center">
 <a href="https://bsky.app/profile/bolhatech.pages.dev" >
   <img src="https://i.imgur.com/gGY2jfX.png" width="500">
@@ -55,4 +58,4 @@ A quantidade de RAM necessária para converter um vídeo pode variar bastante de
    - Pode usar 4 GB de RAM ou mais, dependendo da complexidade do vídeo e das configurações de conversão.
   
 > [!NOTE]
-> Essas são apenas estimativas e o uso real de RAM pode variar. Se você estiver enfrentando problemas de memória, usar uma máquina com mais RAM pode ajudar a melhorar o desempenho.
+> Essas são apenas estimativas e o uso real de RAM pode variar. Se você estiver enfrentando problemas de memória, usar uma  com mais RAM pode ajudar a melhorar o desempenho.
