@@ -9,7 +9,7 @@ const {
     API_URL, LUCENE, FTX, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
     cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL,
     wh_avatarURL, wh_username, WH_ID, WH_TOKEN, BLUESKY_USERNAME,
-    BLUESKY_PASSWORD
+    BLUESKY_PASSWORD, ublock
 } = require('../config/config');
 
 // 🗝️ Cria um objeto para armazenar o token
@@ -123,7 +123,7 @@ async function searchPosts(token) {
 
         // ⚜️ Filtrar e ordenar posts
         const filteredPosts = data.posts
-            .filter(({ indexedAt, record }) => indexedAt && !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase())))
+            .filter(({ indexedAt, record, author }) => indexedAt && !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase())) && !ublock.some(user => author.did.includes(user.did)))
             .sort((a, b) => a.typeid - b.typeid);
 
         return { posts: filteredPosts };

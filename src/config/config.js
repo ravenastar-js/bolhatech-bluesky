@@ -1,5 +1,5 @@
 require('./dotenv');
-
+const ublock = require('../block-requested/users.json');
 const API_URL = 'https://bsky.social/xrpc';
 const TG = process.env.TAG;
 const FTEXT = process.env.FTEXT;
@@ -29,9 +29,9 @@ const embed_bannerURL = "https://i.imgur.com/gGY2jfX.png"
 const wh_avatarURL = "https://i.imgur.com/0q9F06h.png"
 const wh_username = process.env.BLUESKY_USERNAME
 
-const WH_ID = process.env.WH_ID 
-const WH_TOKEN = process.env.WH_TOKEN 
-const BLUESKY_USERNAME = process.env.BLUESKY_USERNAME 
+const WH_ID = process.env.WH_ID
+const WH_TOKEN = process.env.WH_TOKEN
+const BLUESKY_USERNAME = process.env.BLUESKY_USERNAME
 const BLUESKY_PASSWORD = process.env.BLUESKY_PASSWORD
 
 module.exports = {
@@ -50,5 +50,6 @@ module.exports = {
     WH_ID,
     WH_TOKEN,
     BLUESKY_USERNAME,
-    BLUESKY_PASSWORD
+    BLUESKY_PASSWORD,
+    ublock
 };
