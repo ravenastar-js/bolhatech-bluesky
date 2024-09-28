@@ -117,8 +117,7 @@ async function getFollowers(token) {
             }
         };
 
-        const { data } = await axios.get(configFollowers);
-
+        const { data } = await axios(configFollowers);
         fuserSet(data)
     } catch (err) {
         handleRateLimitError(err, 'getFollowers');
@@ -147,7 +146,9 @@ async function searchPosts(token) {
                 'Authorization': `Bearer ${token}`
             }
         };
+
         const { data } = await axios(configPosts);
+        let { followers } = fuser
 
         // ⚜️ Filtrar e ordenar posts
         const filteredPosts = data.posts
@@ -156,24 +157,20 @@ async function searchPosts(token) {
                 record,
                 author
             }) => {
-                let { followers } = fuser
+
                 const OptIn = OnlyOptIn.some(user => author.did.includes(user.did));
                 const ping = record.text.includes(`@${BLUESKY_USERNAME}`);
-                const containsBlockedWords = FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
+                const containsBlockedWords = !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
                 const bFollowers = followers.some(user => author.did.includes(user.did));
 
                 // Permite posts de usuários bloqueados apenas se mencionar o @bolhatech.pages.dev e que não tenha palavras bloqueadas, interação 100% "opt-in".
-                if (indexedAt && !containsBlockedWords && OptIn && ping) {
-                    return true;
-                }
+                if (indexedAt && containsBlockedWords && OptIn && ping) return true;
 
                 // Permite posts de seguidores e que não contêm palavras bloqueadas.
-                if (indexedAt && !containsBlockedWords && bFollowers) {
-                    return true;
-                }
+                if (indexedAt && containsBlockedWords && bFollowers) return true;
 
-                 // Permite posts que não contêm palavras bloqueadas, não são de usuários bloqueados, não são seguidores e que tenha apenas menção (a menos que as exceções acima se aplique).
-                return indexedAt && !containsBlockedWords && !bFollowers && ping
+                // Permite posts que não contêm palavras bloqueadas, não são de usuários bloqueados, não são seguidores e que tenha apenas menção (a menos que as exceções acima se aplique).
+                return indexedAt && containsBlockedWords && ping
             }).sort((a, b) => a.typeid - b.typeid);
 
         return { posts: filteredPosts };
