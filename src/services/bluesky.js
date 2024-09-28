@@ -117,7 +117,7 @@ async function getFollowers(token) {
             }
         };
 
-        const { data } = await axios.post(configFollowers);
+        const { data } = await axios.get(configFollowers);
 
         fuserSet(data)
     } catch (err) {
