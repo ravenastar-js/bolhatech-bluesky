@@ -1,5 +1,5 @@
 require('./dotenv');
-const OnlyOptIn = require('../json/optin.json');
+const OnlyOptIn = require('../json/onlyoptin.json');
 const API_URL = 'https://bsky.social/xrpc';
 const TG = process.env.TAG;
 const FTEXT = process.env.FTEXT;
