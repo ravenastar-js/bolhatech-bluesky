@@ -34,6 +34,8 @@ const WH_TOKEN = process.env.WH_TOKEN
 const BLUESKY_USERNAME = process.env.BLUESKY_USERNAME
 const BLUESKY_PASSWORD = process.env.BLUESKY_PASSWORD
 
+const FOLLOWERS_LIMIT = 100;
+
 module.exports = {
     API_URL,
     TG,
@@ -51,5 +53,6 @@ module.exports = {
     WH_TOKEN,
     BLUESKY_USERNAME,
     BLUESKY_PASSWORD,
-    OnlyOptIn
+    OnlyOptIn,
+    FOLLOWERS_LIMIT
 };

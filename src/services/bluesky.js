@@ -9,7 +9,7 @@ const {
     API_URL, LUCENE, FTX, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
     cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL,
     wh_avatarURL, wh_username, WH_ID, WH_TOKEN, BLUESKY_USERNAME,
-    BLUESKY_PASSWORD, OnlyOptIn
+    BLUESKY_PASSWORD, OnlyOptIn, FOLLOWERS_LIMIT
 } = require('../config/config');
 
 // 🗝️ Cria um objeto para armazenar o token
@@ -21,12 +21,12 @@ function tokenSet(newToken) {
 }
 
 // 🗝️ Cria um objeto para armazenar a lista de usuários seguidores
-// let fuser;
+let fuser;
 
 // 🗝️ Função para definir a lista de usuários em fuser
-// function fuserSet(userList) {
-//    fuser = userList;
-//}
+function fuserSet(userList) {
+    fuser = userList;
+}
 
 const stateFilePath = './state.json';
 const webhookClient = new WebhookClient({ id: WH_ID, token: WH_TOKEN });
@@ -105,25 +105,50 @@ async function changeToken() {
     }
 }
 
-// async function getFollowers(token) {
-//   try {
-//        const configFollowers = {
-//            method: 'get',
-//            maxBodyLength: Infinity,
-//            url: `${API_URL}/app.bsky.graph.getFollowers?actor=${BLUESKY_USERNAME}&limit=100`,
-//            headers: {
-//                'Accept': 'application/json',
-//                'Authorization': `Bearer ${token}`
-//            }
-//        };
-//
-//        const { data } = await axios(configFollowers);
-//        fuserSet(data)
-//        console.log("✳️ "+data.followers.length)
-//    } catch (err) {
-//        handleRateLimitError(err, 'getFollowers');
-//    }
-//}
+
+
+function buildFollowersUrl(cursor) {
+    let url = `${API_URL}/app.bsky.graph.getFollowers?actor=${BLUESKY_USERNAME}&limit=${FOLLOWERS_LIMIT}`;
+    if (cursor) {
+        url += `&cursor=${cursor}`;
+    }
+    return url;
+}
+
+async function getFollowers(token) {
+    try {
+        let allFollowers = [];
+        let cursor = null;
+
+        while (true) {
+            const followersUrl = buildFollowersUrl(cursor);
+
+            const configFollowers = {
+                method: 'get',
+                maxBodyLength: Infinity,
+                url: followersUrl,
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+
+            const { data } = await axios(configFollowers);
+            allFollowers = allFollowers.concat(data.followers);
+
+            if (data.cursor) {
+                cursor = data.cursor;
+            } else {
+                break;
+            }
+        }
+
+        fuserSet(allFollowers);
+        console.log("✳️ " + allFollowers.length);
+    } catch (err) {
+        handleRateLimitError(err, 'getFollowers');
+    }
+}
 
 // 🚫 Função para lidar com erros de limite de taxa
 function handleRateLimitError(err, functionName) {
@@ -149,7 +174,6 @@ async function searchPosts(token) {
         };
 
         const { data } = await axios(configPosts);
-       // let { followers } = fuser
 
         // ⚜️ Filtrar e ordenar posts
         const filteredPosts = data.posts
@@ -162,19 +186,19 @@ async function searchPosts(token) {
                 const OptIn = OnlyOptIn.some(user => author.did.includes(user.did));
                 const ping = record.text.includes(`@${BLUESKY_USERNAME}`);
                 const containsBlockedWords = !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
-                // const bFollowers = followers.some(user => author.did.includes(user.did));
+                const bFollowers = fuser.some(user => author.did.includes(user.did));
 
-                // Se o usuário estiver na lista "opt-in", mencionar o @bolhatech.pages.dev e que não tenha palavras bloqueadas => repostar
+                // Se o usuário estiver na lista "opt-in", mencionar o @bolhatech.pages.dev e não houver palavras bloqueadas => repostar publicações somente com menções.
                 if (indexedAt && containsBlockedWords && OptIn && ping) return true;
 
-                // Se o usuário estiver na lista "opt-in" porém não mencionar o @bolhatech.pages.dev => ignorar
+                // Se o usuário estiver na lista "opt-in" porém não mencionar o @bolhatech.pages.dev => ignorar posts.
                 if (indexedAt && containsBlockedWords && OptIn && !ping) return false;
-                
-                // Permite posts de seguidores e que não contêm palavras bloqueadas.
-                // if (indexedAt && containsBlockedWords && bFollowers) return true;
 
-                // Configuração Padrão (a menos que as exceções acima se apliquem).
-                return indexedAt && containsBlockedWords
+                // Permite posts de seguidores e que não contêm palavras bloqueadas. Funcionamento padrão e irá repostar suas publicações que contenham tags, gatilhos e menções.
+                if (indexedAt && containsBlockedWords && bFollowers) return true;
+
+                // Configuração Padrão (a menos que as exceções acima se apliquem), 100% "opt-in".
+                return indexedAt && containsBlockedWords && ping
             }).sort((a, b) => a.typeid - b.typeid);
 
         return { posts: filteredPosts };
@@ -400,7 +424,7 @@ async function main() {
         console.log(`⏰ CronJob executado em ${startTime}`);
 
         await getAccessToken();
-        // await getFollowers(token);
+        await getFollowers(token);
 
         const { posts } = await searchPosts(token);
 
