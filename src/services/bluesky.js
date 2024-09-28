@@ -119,6 +119,7 @@ async function getFollowers(token) {
 
         const { data } = await axios(configFollowers);
         fuserSet(data)
+        console.log("✳️ "+data.followers.length)
     } catch (err) {
         handleRateLimitError(err, 'getFollowers');
     }
