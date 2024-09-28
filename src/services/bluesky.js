@@ -110,7 +110,7 @@ async function getFollowers(token) {
         const configFollowers = {
             method: 'get',
             maxBodyLength: Infinity,
-            url: `${API_URL}/app.bsky.graph.getFollowers?actor=${BLUESKY_USERNAME}`,
+            url: `${API_URL}/app.bsky.graph.getFollowers?actor=${BLUESKY_USERNAME}&limit=100`,
             headers: {
                 'Accept': 'application/json',
                 'Authorization': `Bearer ${token}`
