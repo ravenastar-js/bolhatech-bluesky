@@ -105,12 +105,19 @@ async function changeToken() {
     }
 }
 
-async function getFollowers() {
+async function getFollowers(token) {
     try {
-        const { data } = await axios.post(`${API_URL}/app.bsky.graph.getFollowers?actor=${BLUESKY_USERNAME}`, {
-            identifier: BLUESKY_USERNAME,
-            password: BLUESKY_PASSWORD
-        });
+        const configFollowers = {
+            method: 'get',
+            maxBodyLength: Infinity,
+            url: `${API_URL}/app.bsky.graph.getFollowers?actor=${BLUESKY_USERNAME}`,
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        };
+
+        const { data } = await axios.post(configFollowers);
 
         fuserSet(data)
     } catch (err) {
@@ -397,7 +404,7 @@ async function main() {
         console.log(`⏰ CronJob executado em ${startTime}`);
 
         await getAccessToken();
-        await getFollowers();
+        await getFollowers(token);
 
         const { posts } = await searchPosts(token);
 
