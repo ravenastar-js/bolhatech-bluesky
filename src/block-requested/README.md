@@ -1,7 +1,7 @@
 > [!NOTE]
 > O bloqueio de "skywatch.bsky.social" em [users.json](./users.json) foi usado como demonstração e exemplificação.
 
-Caso não deseje bloquear [@bolhatech.pages.dev](https://bsky.app/profile/bolhatech.pages.dev) e queira impedir o compartilhamento de suas publicações, alternativamente poderá solicitar a inclusão na lista de bloqueios em [users.json](./users.json). Dessa forma, o bot não irá repostar nenhuma de suas publicações, sem a necessidade de bloqueá-lo.
+Caso não deseje bloquear [@bolhatech.pages.dev](https://bsky.app/profile/bolhatech.pages.dev) e queira impedir o repost de suas publicações, alternativamente poderá solicitar a inclusão na lista de bloqueios em [users.json](./users.json). Dessa forma, o bot não irá repostar nenhuma de suas publicações, sem a necessidade de bloqueá-lo.
 
 > É apenas um filtro. O bot não bloqueará nenhum usuário.
 
