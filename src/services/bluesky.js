@@ -121,10 +121,25 @@ async function searchPosts(token) {
         };
         const { data } = await axios(configTag);
 
-        // ⚜️ Filtrar e ordenar posts
-        const filteredPosts = data.posts
-            .filter(({ indexedAt, record, author }) => indexedAt && !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase())) && !ublock.some(user => author.did.includes(user.did)))
-            .sort((a, b) => a.typeid - b.typeid);
+// ⚜️ Filtrar e ordenar posts
+const filteredPosts = data.posts
+    .filter(({
+        indexedAt,
+        record,
+        author
+    }) => {
+        const isBlocked = ublock.some(user => author.did.includes(user.did));
+        const ping = record.text.includes(`@${BLUESKY_USERNAME}`);
+        const containsBlockedWords = FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
+
+        // Permite posts de usuários bloqueados apenas se mencionar o @bolhatech.pages.dev e que não tenha palavras bloqueadas, interação 100% "opt-in".
+        if (indexedAt && !containsBlockedWords && isBlocked && ping) {
+            return true;
+        }
+
+        // Filtra posts que contêm palavras bloqueadas e não são de usuários bloqueados (a menos que a exceção acima se aplique)
+        return indexedAt && !containsBlockedWords && !isBlocked;
+    }).sort((a, b) => a.typeid - b.typeid);
 
         return { posts: filteredPosts };
     } catch (err) {
