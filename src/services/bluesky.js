@@ -172,13 +172,8 @@ async function searchPosts(token) {
                     return true;
                 }
 
-                // Permite posts que não contêm palavras bloqueadas, não são de usuários bloqueados, não são seguidores e que tenha apenas menção.
-                if (indexedAt && !containsBlockedWords && !bFollowers && ping) {
-                    return true;
-                }
-
-                // Repost padrão (a menos que a exceção acima se aplique)
-                return indexedAt && !containsBlockedWords
+                 // Permite posts que não contêm palavras bloqueadas, não são de usuários bloqueados, não são seguidores e que tenha apenas menção (a menos que as exceções acima se aplique).
+                return indexedAt && !containsBlockedWords && !bFollowers && ping
             }).sort((a, b) => a.typeid - b.typeid);
 
         return { posts: filteredPosts };
