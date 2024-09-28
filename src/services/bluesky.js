@@ -21,12 +21,12 @@ function tokenSet(newToken) {
 }
 
 // 🗝️ Cria um objeto para armazenar a lista de usuários seguidores
-let fuser;
+// let fuser;
 
 // 🗝️ Função para definir a lista de usuários em fuser
-function fuserSet(userList) {
-    fuser = userList;
-}
+// function fuserSet(userList) {
+//    fuser = userList;
+//}
 
 const stateFilePath = './state.json';
 const webhookClient = new WebhookClient({ id: WH_ID, token: WH_TOKEN });
@@ -105,25 +105,25 @@ async function changeToken() {
     }
 }
 
-async function getFollowers(token) {
-    try {
-        const configFollowers = {
-            method: 'get',
-            maxBodyLength: Infinity,
-            url: `${API_URL}/app.bsky.graph.getFollowers?actor=${BLUESKY_USERNAME}&limit=100`,
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        };
-
-        const { data } = await axios(configFollowers);
-        fuserSet(data)
-        console.log("✳️ "+data.followers.length)
-    } catch (err) {
-        handleRateLimitError(err, 'getFollowers');
-    }
-}
+// async function getFollowers(token) {
+//   try {
+//        const configFollowers = {
+//            method: 'get',
+//            maxBodyLength: Infinity,
+//            url: `${API_URL}/app.bsky.graph.getFollowers?actor=${BLUESKY_USERNAME}&limit=100`,
+//            headers: {
+//                'Accept': 'application/json',
+//                'Authorization': `Bearer ${token}`
+//            }
+//        };
+//
+//        const { data } = await axios(configFollowers);
+//        fuserSet(data)
+//        console.log("✳️ "+data.followers.length)
+//    } catch (err) {
+//        handleRateLimitError(err, 'getFollowers');
+//    }
+//}
 
 // 🚫 Função para lidar com erros de limite de taxa
 function handleRateLimitError(err, functionName) {
@@ -149,7 +149,7 @@ async function searchPosts(token) {
         };
 
         const { data } = await axios(configPosts);
-        let { followers } = fuser
+       // let { followers } = fuser
 
         // ⚜️ Filtrar e ordenar posts
         const filteredPosts = data.posts
@@ -162,16 +162,19 @@ async function searchPosts(token) {
                 const OptIn = OnlyOptIn.some(user => author.did.includes(user.did));
                 const ping = record.text.includes(`@${BLUESKY_USERNAME}`);
                 const containsBlockedWords = !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
-                const bFollowers = followers.some(user => author.did.includes(user.did));
+                // const bFollowers = followers.some(user => author.did.includes(user.did));
 
-                // Permite posts de usuários bloqueados apenas se mencionar o @bolhatech.pages.dev e que não tenha palavras bloqueadas, interação 100% "opt-in".
+                // Se o usuário estiver na lista "opt-in", mencionar o @bolhatech.pages.dev e que não tenha palavras bloqueadas => repostar
                 if (indexedAt && containsBlockedWords && OptIn && ping) return true;
 
+                // Se o usuário estiver na lista "opt-in" porém não mencionar o @bolhatech.pages.dev => ignorar
+                if (indexedAt && containsBlockedWords && OptIn && !ping) return false;
+                
                 // Permite posts de seguidores e que não contêm palavras bloqueadas.
-                if (indexedAt && containsBlockedWords && bFollowers) return true;
+                // if (indexedAt && containsBlockedWords && bFollowers) return true;
 
-                // Permite posts que não contêm palavras bloqueadas, não são de usuários bloqueados, não são seguidores e que tenha apenas menção (a menos que as exceções acima se aplique).
-                return indexedAt && containsBlockedWords && ping
+                // Configuração Padrão (a menos que as exceções acima se apliquem).
+                return indexedAt && containsBlockedWords
             }).sort((a, b) => a.typeid - b.typeid);
 
         return { posts: filteredPosts };
@@ -397,7 +400,7 @@ async function main() {
         console.log(`⏰ CronJob executado em ${startTime}`);
 
         await getAccessToken();
-        await getFollowers(token);
+        // await getFollowers(token);
 
         const { posts } = await searchPosts(token);
 
