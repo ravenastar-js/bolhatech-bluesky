@@ -14,7 +14,7 @@ function fString(f) {
     return words.length === 1 ? f : words;
 }
 
-const EXTRAS = `,studytechbr,studytech,mulhertech,girltech,bubbletech,#discloud,#ravenastar,@${process.env.BLUESKY_USERNAME}`
+const EXTRAS = `,studytechbr,studytech,mulhertech,girltech,bubbletech,discloud,#ravenastar,@${process.env.BLUESKY_USERNAME}`
 const LUCENE = convertString(TG + EXTRAS)
 const FTX = fString(FTEXT)
 
