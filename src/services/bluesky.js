@@ -54,7 +54,6 @@ function saveState(state) {
 // 🔄 Carrega o estado inicial
 let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did } = loadState();
 let { token } = tokenObject
-let { followers } = fuser
 
 // 🔑 Função para obter o token de acesso
 async function getAccessToken() {
@@ -150,6 +149,7 @@ async function searchPosts(token) {
                 record,
                 author
             }) => {
+                let { followers } = fuser
                 const OptIn = OnlyOptIn.some(user => author.did.includes(user.did));
                 const ping = record.text.includes(`@${BLUESKY_USERNAME}`);
                 const containsBlockedWords = FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
