@@ -18,7 +18,11 @@
 ⏰ Intervalo de tempo para verificar as postagens (a cada 8 min)<br>
 ⏰ time interval to check posts (every 8 min)
 
-#### 🎯 ADDITIONAL TRIGGERS / GATILHOS ADICIONAIS
+#### 🏷 TAGS
+
+🏷 ravenastar
+
+#### 🎯 TRIGGERS / GATILHOS
 
 🎯 studytechbr | 🎯 studytech | 🎯 mulhertech | 🎯 girltech | 🎯 bubbletech | 🎯 discloud
 
