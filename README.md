@@ -1,5 +1,5 @@
 > [!WARNING]
-> `bolhatech` realizará reposts de publicações apenas de acordo com os gatilhos definidos neste projeto. Caso deseje impedir tal ação, basta bloquear [@bolhatech.pages.dev](https://bsky.app/profile/bolhatech.pages.dev).
+> Caso seja seguidor(a) de [@bolhatech.pages.dev](https://bsky.app/profile/bolhatech.pages.dev) e não estiver incluído na lista "onlyoptin" em [onlyoptin.json](./src/json/README.md), `BolhaTech` terá funcionamento padrão e irá repostar suas publicações que contenham tags, gatilhos e menções.
 
 <div align="center">
 <a href="https://bsky.app/profile/bolhatech.pages.dev" >
