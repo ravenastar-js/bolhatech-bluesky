@@ -2,7 +2,7 @@
 > "skywatch.bsky.social" foi incluso em [onlyoptin.json](./onlyoptin.json) como demonstração e exemplificação.
 
 > [!IMPORTANT] 
-> Caso não esteja incluso na lista "onlyoptin" em [onlyoptin.json](./src/json/README.md), `BolhaTech` terá funcionamento padrão e irá repostar suas publicações que contenham tags, gatilhos e menções. 
+> Caso seja seguidor(a) de [@bolhatech.pages.dev](https://bsky.app/profile/bolhatech.pages.dev) e não estiver presente na lista "onlyoptin" em [onlyoptin.json](./onlyoptin.json), `BolhaTech` irá repostar publicações que contenham tags, gatilhos e menções.
 
 Caso queira impedir o repost de suas publicações que contenham tags e gatilhos, alternativamente poderá solicitar a inclusão na lista "onlyoptin" em [onlyoptin.json](./onlyoptin.json). Dessa forma, o bot não irá repostar nenhuma de suas publicações que contenham tags e gatilhos.
 

@@ -1,5 +1,5 @@
 > [!WARNING]
-> Caso não esteja incluso na lista "onlyoptin" em [onlyoptin.json](./src/json/README.md), `BolhaTech` terá funcionamento padrão e irá repostar suas publicações que contenham tags, gatilhos e menções. 
+> Caso seja seguidor(a) de [@bolhatech.pages.dev](https://bsky.app/profile/bolhatech.pages.dev) e não estiver presente na lista "onlyoptin" em [onlyoptin.json](./src/json/README.md), `BolhaTech` irá repostar publicações que contenham tags, gatilhos e menções.
 
 <div align="center">
 <a href="https://bsky.app/profile/bolhatech.pages.dev" >
