@@ -138,7 +138,7 @@ function handleRateLimitError(err, functionName) {
 // 🔖 Função para obter posts
 async function searchPosts(token) {
     try {
-        const configTag = {
+        const configPosts = {
             method: 'get',
             maxBodyLength: Infinity,
             url: `${API_URL}/app.bsky.feed.searchPosts?q=${LUCENE}&sort=latest&limit=100`,
@@ -147,7 +147,7 @@ async function searchPosts(token) {
                 'Authorization': `Bearer ${token}`
             }
         };
-        const { data } = await axios(configTag);
+        const { data } = await axios(configPosts);
 
         // ⚜️ Filtrar e ordenar posts
         const filteredPosts = data.posts
