@@ -1,5 +1,5 @@
 require('./dotenv');
-const ublock = require('../block-requested/users.json');
+const OnlyOptIn = require('../json/optin.json');
 const API_URL = 'https://bsky.social/xrpc';
 const TG = process.env.TAG;
 const FTEXT = process.env.FTEXT;
@@ -51,5 +51,5 @@ module.exports = {
     WH_TOKEN,
     BLUESKY_USERNAME,
     BLUESKY_PASSWORD,
-    ublock
+    OnlyOptIn
 };

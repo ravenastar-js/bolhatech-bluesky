@@ -9,7 +9,7 @@ const {
     API_URL, LUCENE, FTX, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
     cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL,
     wh_avatarURL, wh_username, WH_ID, WH_TOKEN, BLUESKY_USERNAME,
-    BLUESKY_PASSWORD, ublock
+    BLUESKY_PASSWORD, OnlyOptIn
 } = require('../config/config');
 
 // 🗝️ Cria um objeto para armazenar o token
@@ -18,6 +18,14 @@ let tokenObject = { token: "" };
 // 🗝️ Função para definir o token em tokenObject
 function tokenSet(newToken) {
     tokenObject.token = newToken;
+}
+
+// 🗝️ Cria um objeto para armazenar a lista de usuários seguidores
+let fuser;
+
+// 🗝️ Função para definir a lista de usuários em fuser
+function fuserSet(userList) {
+    fuser = userList;
 }
 
 const stateFilePath = './state.json';
@@ -46,6 +54,7 @@ function saveState(state) {
 // 🔄 Carrega o estado inicial
 let { actionPoints, lastHourReset, dailyRequestCount, lastDailyReset, did } = loadState();
 let { token } = tokenObject
+let { followers } = fuser
 
 // 🔑 Função para obter o token de acesso
 async function getAccessToken() {
@@ -97,6 +106,19 @@ async function changeToken() {
     }
 }
 
+async function getFollowers() {
+    try {
+        const { data } = await axios.post(`${API_URL}/app.bsky.graph.getFollowers?actor=${BLUESKY_USERNAME}`, {
+            identifier: BLUESKY_USERNAME,
+            password: BLUESKY_PASSWORD
+        });
+
+        fuserSet(data)
+    } catch (err) {
+        handleRateLimitError(err, 'getFollowers');
+    }
+}
+
 // 🚫 Função para lidar com erros de limite de taxa
 function handleRateLimitError(err, functionName) {
     if (err.response && err.response.data && err.response.data.error === "RateLimitExceeded") {
@@ -121,25 +143,36 @@ async function searchPosts(token) {
         };
         const { data } = await axios(configTag);
 
-// ⚜️ Filtrar e ordenar posts
-const filteredPosts = data.posts
-    .filter(({
-        indexedAt,
-        record,
-        author
-    }) => {
-        const isBlocked = ublock.some(user => author.did.includes(user.did));
-        const ping = record.text.includes(`@${BLUESKY_USERNAME}`);
-        const containsBlockedWords = FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
+        // ⚜️ Filtrar e ordenar posts
+        const filteredPosts = data.posts
+            .filter(({
+                indexedAt,
+                record,
+                author
+            }) => {
+                const OptIn = OnlyOptIn.some(user => author.did.includes(user.did));
+                const ping = record.text.includes(`@${BLUESKY_USERNAME}`);
+                const containsBlockedWords = FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
+                const bFollowers = followers.some(user => author.did.includes(user.did));
 
-        // Permite posts de usuários bloqueados apenas se mencionar o @bolhatech.pages.dev e que não tenha palavras bloqueadas, interação 100% "opt-in".
-        if (indexedAt && !containsBlockedWords && isBlocked && ping) {
-            return true;
-        }
+                // Permite posts de usuários bloqueados apenas se mencionar o @bolhatech.pages.dev e que não tenha palavras bloqueadas, interação 100% "opt-in".
+                if (indexedAt && !containsBlockedWords && OptIn && ping) {
+                    return true;
+                }
 
-        // Filtra posts que contêm palavras bloqueadas e não são de usuários bloqueados (a menos que a exceção acima se aplique)
-        return indexedAt && !containsBlockedWords && !isBlocked;
-    }).sort((a, b) => a.typeid - b.typeid);
+                // Permite posts de seguidores e que não contêm palavras bloqueadas.
+                if (indexedAt && !containsBlockedWords && bFollowers) {
+                    return true;
+                }
+
+                // Permite posts que não contêm palavras bloqueadas, não são de usuários bloqueados, não são seguidores e que tenha apenas menção.
+                if (indexedAt && !containsBlockedWords && !bFollowers && ping) {
+                    return true;
+                }
+
+                // Repost padrão (a menos que a exceção acima se aplique)
+                return indexedAt && !containsBlockedWords
+            }).sort((a, b) => a.typeid - b.typeid);
 
         return { posts: filteredPosts };
     } catch (err) {
@@ -364,7 +397,7 @@ async function main() {
         console.log(`⏰ CronJob executado em ${startTime}`);
 
         await getAccessToken();
-
+        await getFollowers();
 
         const { posts } = await searchPosts(token);
 
