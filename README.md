@@ -18,13 +18,9 @@
 ⏰ Intervalo de tempo para verificar as postagens (a cada 8 min)<br>
 ⏰ time interval to check posts (every 8 min)
 
-#### 🏷 TAGS
-
-🏷 ravenastar
-
 #### 🎯 TRIGGERS / GATILHOS
 
-🎯 studytechbr | 🎯 studytech | 🎯 mulhertech | 🎯 girltech | 🎯 bubbletech | 🎯 discloud
+🎯 studytechbr | 🎯 studytech | 🎯 mulhertech | 🎯 girltech | 🎯 bubbletech | 🎯 discloud | 🎯 ravenastar
 
 <a href="https://docs.bsky.app/">
   <img src="https://i.imgur.com/8HGAasG.png" width="500">
