@@ -20,7 +20,7 @@
 
 #### 🎯 TRIGGERS / GATILHOS
 
-🎯 studytechbr | 🎯 studytech | 🎯 mulhertech | 🎯 girltech | 🎯 bubbletech | 🎯 discloud | 🎯 ravenastar
+🎯 studytechbr | 🎯 studytech | 🎯 mulhertech | 🎯 girltech | 🎯 bubbletech | 🎯 discloud | 🎯 ravenastar | 🎯 elastech
 
 <a href="https://docs.bsky.app/">
   <img src="https://i.imgur.com/8HGAasG.png" width="500">
