@@ -188,10 +188,10 @@ async function searchPosts(token) {
                 const containsBlockedWords = !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
                 const bFollowers = fuser.some(user => author.did.includes(user.did));
 
-                // Se o usuário estiver na lista "opt-in", mencionar o @bolhatech.pages.dev e não houver palavras bloqueadas => repostar publicações somente com menções.
+                // Se o usuário estiver na lista "opt-in", mencionar o @bolhatech.blue e não houver palavras bloqueadas => repostar publicações somente com menções.
                 if (indexedAt && containsBlockedWords && OptIn && ping) return true;
 
-                // Se o usuário estiver na lista "opt-in" porém não mencionar o @bolhatech.pages.dev => ignorar posts.
+                // Se o usuário estiver na lista "opt-in" porém não mencionar o @bolhatech.blue => ignorar posts.
                 if (indexedAt && containsBlockedWords && OptIn && !ping) return false;
 
                 // Permite posts de seguidores e que não contêm palavras bloqueadas. Funcionamento padrão e irá repostar suas publicações que contenham tags, gatilhos e menções.
