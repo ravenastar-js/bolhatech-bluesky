@@ -1,14 +1,14 @@
 > [!WARNING]
-> Caso seja seguidor(a) de [@bolhatech.pages.dev](https://bsky.app/profile/bolhatech.pages.dev) e não estiver presente na lista "onlyoptin" em [onlyoptin.json](./src/json/README.md), `BolhaTech` irá repostar publicações que contenham tags, gatilhos e menções.
+> Caso seja seguidor(a) de [@bolhatech.blue](https://bsky.app/profile/bolhatech.blue) e não estiver presente na lista "onlyoptin" em [onlyoptin.json](./src/json/README.md), `BolhaTech` irá repostar publicações que contenham tags, gatilhos e menções.
 
 <div align="center">
-<a href="https://bsky.app/profile/bolhatech.pages.dev" >
+<a href="https://bsky.app/profile/bolhatech.blue" >
   <img src="https://i.imgur.com/gGY2jfX.png" width="500">
 </a>
 <br> <br> 
 
-➤ `bolhatech` in text, [hashtag](https://bsky.app/hashtag/bolhatech) or [@bolhatech.pages.dev](https://bsky.app/profile/bolhatech.pages.dev)<br>
-(BETA) by [RavenaStar](https://bsky.app/profile/ravenastar.pages.dev)
+➤ `bolhatech` in text, [hashtag](https://bsky.app/hashtag/bolhatech) or [@bolhatech.blue](https://bsky.app/profile/bolhatech.blue)<br>
+(BETA) by [RavenaStar](https://bsky.app/profile/ravenastar.bolhatech.blue)
  
  inspired by [@samsantosb.bsky.social](https://bsky.app/profile/samsantosb.bsky.social)
 
