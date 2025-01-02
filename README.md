@@ -1,5 +1,7 @@
 > [!WARNING]
 > Caso seja seguidor(a) de [@bolhatech.blue](https://bsky.app/profile/bolhatech.blue) e não estiver presente na lista "onlyoptin" em [onlyoptin.json](./src/json/README.md), `BolhaTech` irá repostar publicações que contenham tags, gatilhos e menções.
+>
+> If you are a follower of [@bolhatech.blue](https://bsky.app/profile/bolhatech.blue) and you are not listed in the "onlyoptin" list in [onlyoptin.json](./src/json/README.md), `BolhaTech` will repost publications containing tags, triggers, and mentions.
 
 <div align="center">
 <a href="https://bsky.app/profile/bolhatech.blue" >
