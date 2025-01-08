@@ -5,7 +5,7 @@
 
 <div align="center">
 <a href="https://bsky.app/profile/bolhatech.blue" >
-  <img src="https://i.imgur.com/gGY2jfX.png" width="500">
+  <img src="https://i.imgur.com/xSARWn5.png" width="500">
 </a>
 <br> <br> 
 
