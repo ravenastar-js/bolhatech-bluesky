@@ -29,8 +29,10 @@ const embed_bannerURL = "https://i.imgur.com/xSARWn5.png"
 const wh_avatarURL = "https://i.imgur.com/0q9F06h.png"
 const wh_username = process.env.BLUESKY_USERNAME
 
-const WH_ID = process.env.WH_ID
-const WH_TOKEN = process.env.WH_TOKEN
+const WH_ID_1 = process.env.WH_ID_1
+const WH_TOKEN_1 = process.env.WH_TOKEN_1
+const WH_ID_2 = process.env.WH_ID_2
+const WH_TOKEN_2 = process.env.WH_TOKEN_2
 const BLUESKY_USERNAME = process.env.BLUESKY_USERNAME
 const BLUESKY_PASSWORD = process.env.BLUESKY_PASSWORD
 
@@ -49,8 +51,10 @@ module.exports = {
     embed_bannerURL,
     wh_avatarURL,
     wh_username,
-    WH_ID,
-    WH_TOKEN,
+    WH_ID_1,
+    WH_TOKEN_1,
+    WH_ID_2,
+    WH_TOKEN_2,
     BLUESKY_USERNAME,
     BLUESKY_PASSWORD,
     OnlyOptIn,

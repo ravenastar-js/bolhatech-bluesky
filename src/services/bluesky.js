@@ -8,8 +8,8 @@ const { EmbedBuilder, WebhookClient } = require('discord.js');
 const {
     API_URL, LUCENE, FTX, MAX_REQUESTS_PER_HOUR, MAX_REQUESTS_PER_EXECUTION,
     cronMinutes, MAX_POINTS_PER_HOUR, embed_color, embed_bannerURL,
-    wh_avatarURL, wh_username, WH_ID, WH_TOKEN, BLUESKY_USERNAME,
-    BLUESKY_PASSWORD, OnlyOptIn, FOLLOWERS_LIMIT
+    wh_avatarURL, wh_username, WH_ID_1, WH_TOKEN_1, BLUESKY_USERNAME,
+    WH_ID_2, WH_TOKEN_2, BLUESKY_PASSWORD, OnlyOptIn, FOLLOWERS_LIMIT
 } = require('../config/config');
 
 // 🗝️ Cria um objeto para armazenar o token
@@ -29,7 +29,8 @@ function fuserSet(userList) {
 }
 
 const stateFilePath = './state.json';
-const webhookClient = new WebhookClient({ id: WH_ID, token: WH_TOKEN });
+const webhookClient_1 = new WebhookClient({ id: WH_ID_1, token: WH_TOKEN_1 });
+const webhookClient_2 = new WebhookClient({ id: WH_ID_2, token: WH_TOKEN_2 });
 
 // 💾 Função para carregar o estado do arquivo JSON
 function loadState() {
@@ -275,8 +276,6 @@ async function sendWebhookNotification(target, repostData) {
             .setDescription(`${desc_embed}\n-# \`⏰\` Publicação postada <t:${unixEpochTimeInSeconds}:R>\n-# <:rbluesky:1282450204947251263> [PUBLICAÇÃO REPOSTADA](${link}) por [@${wh_username}](https://bsky.app/profile/${wh_username})`)
             .setImage(embed_bannerURL)
 
-
-
         // 🎥 Função para download e conversão de vídeo
         const downloadAndConvertVideo = async (url, outputPath) => {
             // ⚙️ Configura o caminho do FFmpeg
@@ -339,14 +338,23 @@ async function sendWebhookNotification(target, repostData) {
             handleRateLimitError(err, 'processFiles');
         }
 
-        // 📤 Envia o webhook com os arquivos e o embed
-        await webhookClient.send({
-            content: `<@&1282578310383145024>`,
-            username: wh_username,
-            avatarURL: wh_avatarURL,
-            files: wh_files,
-            embeds: [WH_Embed],
-        });
+        // 📤 Envia o webhook com os arquivos e o embed para ambos os webhooks
+        await Promise.all([
+            webhookClient_1.send({
+                content: `<@&1282578310383145024>`,
+                username: wh_username,
+                avatarURL: wh_avatarURL,
+                files: wh_files,
+                embeds: [WH_Embed],
+            }),
+            webhookClient_2.send({
+                content: `<@&1334158343572553748>`,
+                username: wh_username,
+                avatarURL: wh_avatarURL,
+                files: wh_files,
+                embeds: [WH_Embed],
+            })
+        ]);
 
         // 🗑️ Remove o arquivo após o envio
         wh_files.forEach(file => {
@@ -355,12 +363,12 @@ async function sendWebhookNotification(target, repostData) {
             }
         });
 
-
         console.log(`📌 Repostado de ${target.author.handle}:\n🌱 CID: ${target.cid}\n🔄🔗 ${link}\n`);
 
     } catch (err) {
         handleRateLimitError(err, 'sendWebhookNotification');
     }
+
 }
 
 // 🔄 Função para repostar uma publicação
