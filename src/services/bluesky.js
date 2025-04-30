@@ -135,6 +135,12 @@ async function getFollowers(token) {
             };
 
             const { data } = await axios(configFollowers);
+
+            if (!data || !data.followers) {
+                console.warn('⚠️ Nenhum dado de seguidores retornado.');
+                break;
+            }
+
             allFollowers = allFollowers.concat(data.followers);
 
             if (data.cursor) {
@@ -145,11 +151,12 @@ async function getFollowers(token) {
         }
 
         fuserSet(allFollowers);
-        console.log("✳️ " + allFollowers.length);
+        console.log("✳️ Total de seguidores: " + allFollowers.length);
     } catch (err) {
         handleRateLimitError(err, 'getFollowers');
     }
 }
+
 
 // 🚫 Função para lidar com erros de limite de taxa
 function handleRateLimitError(err, functionName) {
@@ -164,6 +171,11 @@ function handleRateLimitError(err, functionName) {
 // 🔖 Função para obter posts
 async function searchPosts(token) {
     try {
+        if (!token || typeof token !== 'string') {
+            console.warn('⚠️ Token inválido fornecido a searchPosts.');
+            return { posts: [] };
+        }
+
         const configPosts = {
             method: 'get',
             maxBodyLength: Infinity,
@@ -176,37 +188,31 @@ async function searchPosts(token) {
 
         const { data } = await axios(configPosts);
 
-        // ⚜️ Filtrar e ordenar posts
-        const filteredPosts = data.posts
-            .filter(({
-                indexedAt,
-                record,
-                author
-            }) => {
+        if (!data || !Array.isArray(data.posts)) {
+            console.warn('⚠️ Nenhum post retornado pela API.');
+            return { posts: [] };
+        }
 
-                const OptIn = OnlyOptIn.some(user => author.did.includes(user.did));
-                const ping = record.text.includes(`@${BLUESKY_USERNAME}`);
-                const containsBlockedWords = !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
-                const bFollowers = fuser.some(user => author.did.includes(user.did));
+        const filteredPosts = data.posts.filter(({ indexedAt, record, author }) => {
+            const OptIn = OnlyOptIn.some(user => author.did.includes(user.did));
+            const ping = record.text.includes(`@${BLUESKY_USERNAME}`);
+            const containsBlockedWords = !FTX.some(word => record.text.toLowerCase().includes(word.toLowerCase()));
+            const bFollowers = fuser.some(user => author.did.includes(user.did));
 
-                // Se o usuário estiver na lista "opt-in", mencionar o @bolhatech.blue e não houver palavras bloqueadas => repostar publicações somente com menções.
-                if (indexedAt && containsBlockedWords && OptIn && ping) return true;
+            if (indexedAt && containsBlockedWords && OptIn && ping) return true;
+            if (indexedAt && containsBlockedWords && OptIn && !ping) return false;
+            if (indexedAt && containsBlockedWords && bFollowers) return true;
 
-                // Se o usuário estiver na lista "opt-in" porém não mencionar o @bolhatech.blue => ignorar posts.
-                if (indexedAt && containsBlockedWords && OptIn && !ping) return false;
-
-                // Permite posts de seguidores e que não contêm palavras bloqueadas. Funcionamento padrão e irá repostar suas publicações que contenham tags, gatilhos e menções.
-                if (indexedAt && containsBlockedWords && bFollowers) return true;
-
-                // Configuração Padrão (a menos que as exceções acima se apliquem), 100% "opt-in".
-                return indexedAt && containsBlockedWords && ping
-            }).sort((a, b) => a.typeid - b.typeid);
+            return indexedAt && containsBlockedWords && ping;
+        }).sort((a, b) => a.typeid - b.typeid);
 
         return { posts: filteredPosts };
     } catch (err) {
         handleRateLimitError(err, 'searchPosts');
+        return { posts: [] }; // previne erro de destructuring
     }
 }
+
 
 // 📝 Função para criar dados de repostagem
 const createRepostData = (target, did) => ({
@@ -425,30 +431,33 @@ async function checkIfReposted(target, token) {
 async function main() {
     try {
         validateEnvVariables();
-
         resetCountersIfNeeded();
 
         const startTime = new Date().toLocaleTimeString();
         console.log(`⏰ CronJob executado em ${startTime}`);
 
         await getAccessToken();
-        await getFollowers(token);
+        await getFollowers(tokenObject.token);
 
-        const { posts } = await searchPosts(token);
+        const { posts = [] } = await searchPosts(tokenObject.token);
 
-        const allPosts = [...posts];
-        const unrepostedPosts = await filterUnrepostedPosts(allPosts, token);
-
-        if (unrepostedPosts.length === 0) {
-            console.log('══════✮❁•° 🦋 °•❁✮══════');
+        if (!posts.length) {
+            console.log('📭 Nenhuma publicação válida encontrada.');
             return;
         }
 
-        await repostUnrepostedPosts(unrepostedPosts, token, did);
+        for (const post of posts) {
+            const alreadyReposted = await checkIfReposted(post, tokenObject.token);
+            if (!alreadyReposted) {
+                await repost(post, tokenObject.token, did);
+            }
+        }
+
     } catch (err) {
         handleRateLimitError(err, 'main');
     }
 }
+
 
 // ✅ Função para validar variáveis de ambiente
 function validateEnvVariables() {
